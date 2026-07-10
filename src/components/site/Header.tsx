@@ -23,14 +23,14 @@ export function Header() {
         scrolled ? "glass" : "bg-transparent border-b border-transparent"
       }`}
     >
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+      <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-6">
         <a href="#top" className="flex items-center gap-2" aria-label="Acessofast">
           <img
             src={logoAsset.url}
             alt="Acessofast"
-            className="h-9 w-auto"
-            width={180}
-            height={36}
+            className="h-14 w-auto md:h-16"
+            width={320}
+            height={64}
           />
         </a>
         <nav className="hidden items-center gap-8 md:flex">
