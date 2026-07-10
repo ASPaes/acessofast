@@ -1,4 +1,6 @@
 import { ArrowRight } from "lucide-react";
+import heroMockup from "@/assets/acessofast-mockup.png.asset.json";
+
 
 export function Hero() {
   return (
@@ -35,19 +37,20 @@ export function Hero() {
           </div>
         </div>
 
-        {/* Visual de infraestrutura (placeholder) */}
-        <div
-          data-placeholder="hero-illustration"
-          className="relative mx-auto mt-20 aspect-[16/8] max-w-5xl overflow-hidden rounded-card border border-border bg-surface shadow-lift"
-        >
-          <div className="absolute inset-0 mesh-hero" />
-          <div className="absolute inset-0 grid grid-cols-6 gap-px opacity-40">
-            {Array.from({ length: 36 }).map((_, i) => (
-              <div key={i} className="border-r border-b border-border/60" />
-            ))}
+        {/* Visual da tela de acesso remoto */}
+        <div className="relative mx-auto mt-20 max-w-5xl">
+          <div className="relative overflow-hidden rounded-card border border-border bg-surface shadow-lift">
+            <img
+              src={heroMockup.url}
+              alt="Painel do Acessofast mostrando sessões de acesso remoto ativas"
+              className="w-full"
+              width={1200}
+              height={675}
+              loading="eager"
+            />
           </div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="rounded-2xl border border-border bg-surface/80 px-6 py-4 shadow-soft backdrop-blur">
+          <div className="absolute -bottom-5 left-1/2 -translate-x-1/2">
+            <div className="rounded-2xl border border-border bg-surface/90 px-6 py-4 shadow-soft backdrop-blur">
               <div className="flex items-center gap-3">
                 <span className="h-2.5 w-2.5 rounded-full bg-success shadow-[0_0_0_4px_color-mix(in_oklab,var(--success)_20%,transparent)]" />
                 <span className="text-sm font-medium text-text">
@@ -57,6 +60,7 @@ export function Hero() {
             </div>
           </div>
         </div>
+
       </div>
     </section>
   );
