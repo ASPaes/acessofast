@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import logoAsset from "@/assets/acessofast-logo.png.asset.json";
 
 const nav = [
   { href: "#recursos", label: "Recursos" },
@@ -23,13 +24,14 @@ export function Header() {
       }`}
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-        <a href="#top" className="flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground font-bold">
-            A
-          </span>
-          <span className="text-[17px] font-bold tracking-tight text-text">
-            Acessofast
-          </span>
+        <a href="#top" className="flex items-center gap-2" aria-label="Acessofast">
+          <img
+            src={logoAsset.url}
+            alt="Acessofast"
+            className="h-9 w-auto"
+            width={180}
+            height={36}
+          />
         </a>
         <nav className="hidden items-center gap-8 md:flex">
           {nav.map((n) => (

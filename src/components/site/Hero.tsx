@@ -1,13 +1,13 @@
-import { ArrowRight, ShieldCheck } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export function Hero() {
   return (
     <section id="top" className="relative overflow-hidden pt-32 pb-24 mesh-hero">
       <div className="mx-auto max-w-6xl px-6">
         <div className="mx-auto max-w-3xl text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface/70 px-3 py-1 text-xs font-medium text-text-muted backdrop-blur">
-            <ShieldCheck className="h-3.5 w-3.5 text-primary" strokeWidth={1.75} />
-            Plataforma brasileira · LGPD-ready
+          <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.28em] text-primary">
+            <span className="h-px w-8 bg-primary/50" />
+            Conectou. Resolveu.
           </span>
           <h1 className="mt-6 text-balance text-5xl font-extrabold tracking-tight text-text sm:text-6xl md:text-[68px] md:leading-[1.05]">
             Acesso remoto e suporte de TI,

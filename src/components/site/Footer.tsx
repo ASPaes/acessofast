@@ -1,17 +1,18 @@
+import logoAsset from "@/assets/acessofast-logo.png.asset.json";
+
 export function Footer() {
   return (
     <footer className="border-t border-border bg-surface">
       <div className="mx-auto max-w-6xl px-6 py-12">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
           <div className="md:col-span-2">
-            <div className="flex items-center gap-2">
-              <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary font-bold text-primary-foreground">
-                A
-              </span>
-              <span className="text-[17px] font-bold tracking-tight text-text">
-                Acessofast
-              </span>
-            </div>
+            <img
+              src={logoAsset.url}
+              alt="Acessofast"
+              className="h-11 w-auto"
+              width={220}
+              height={44}
+            />
             <p className="mt-4 max-w-sm text-sm text-text-muted">
               Plataforma brasileira de acesso remoto e suporte de TI. Um produto da ASP Softwares.
             </p>
