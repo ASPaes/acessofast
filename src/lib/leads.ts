@@ -6,7 +6,7 @@ export type LeadPayload = {
   email: string;
   telefone: string;
   tecnicos: "1" | "2-5" | "6-20" | "20+";
-  segmento: "MSP" | "Clinica" | "TI interno" | "Outro";
+  segmento: "MSP" | "Revenda de software" | "Suporte / Help desk" | "TI interno" | "Outro";
   mensagem?: string;
   consentimento_lgpd: boolean;
 };
@@ -20,14 +20,14 @@ export async function insertLead(payload: LeadPayload) {
     };
   };
   const { error } = await client.from("leads").insert({
-    nome: payload.nome,
-    empresa: payload.empresa,
+    name: payload.nome,
+    company: payload.empresa,
     email: payload.email,
-    telefone: payload.telefone,
-    tecnicos: payload.tecnicos,
-    segmento: payload.segmento,
-    mensagem: payload.mensagem ?? null,
-    consentimento_lgpd: payload.consentimento_lgpd,
+    phone: payload.telefone,
+    team_size: payload.tecnicos,
+    segment: payload.segmento,
+    message: payload.mensagem ?? null,
+    consent: payload.consentimento_lgpd,
   });
   if (error) throw new Error(error.message);
 }

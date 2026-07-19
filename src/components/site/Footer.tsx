@@ -20,16 +20,16 @@ export function Footer() {
           <div>
             <p className="text-sm font-semibold text-text">Produto</p>
             <ul className="mt-3 space-y-2 text-sm text-text-muted">
-              <li><a href="#recursos" className="hover:text-text">Recursos</a></li>
-              <li><a href="#diferenciais" className="hover:text-text">Diferenciais</a></li>
-              <li><a href="#preco" className="hover:text-text">Preço</a></li>
-              <li><a href="#faq" className="hover:text-text">FAQ</a></li>
+              <li><a href="/#recursos" className="hover:text-text">Recursos</a></li>
+              <li><a href="/#diferenciais" className="hover:text-text">Diferenciais</a></li>
+              <li><a href="/#preco" className="hover:text-text">Preço</a></li>
+              <li><a href="/#faq" className="hover:text-text">FAQ</a></li>
             </ul>
           </div>
           <div>
             <p className="text-sm font-semibold text-text">Contato</p>
             <ul className="mt-3 space-y-2 text-sm text-text-muted">
-              <li><a href="#contato" className="hover:text-text">Falar com especialista</a></li>
+              <li><a href="/#contato" className="hover:text-text">Falar com especialista</a></li>
               <li><a href="/privacidade" className="hover:text-text">Política de Privacidade</a></li>
             </ul>
           </div>

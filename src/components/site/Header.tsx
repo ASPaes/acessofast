@@ -3,10 +3,10 @@ import { Link } from "@tanstack/react-router";
 import logoAsset from "@/assets/acessofast-logo-real.png.asset.json";
 
 const nav = [
-  { href: "#recursos", label: "Recursos" },
-  { href: "#diferenciais", label: "Diferenciais" },
-  { href: "#preco", label: "Preço" },
-  { href: "#faq", label: "FAQ" },
+  { href: "/#recursos", label: "Recursos" },
+  { href: "/#diferenciais", label: "Diferenciais" },
+  { href: "/#preco", label: "Preço" },
+  { href: "/#faq", label: "FAQ" },
 ];
 
 export function Header() {
@@ -25,7 +25,7 @@ export function Header() {
       }`}
     >
       <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-6">
-        <a href="#top" className="flex items-center gap-2" aria-label="Acessofast">
+        <a href="/#top" className="flex items-center gap-2" aria-label="Acessofast">
           <img
             src={logoAsset.url}
             alt="Acessofast"
@@ -47,7 +47,7 @@ export function Header() {
           <Link to="/baixar" className="text-sm font-medium text-text-muted transition-colors hover:text-text">Baixar</Link>
         </nav>
         <a
-          href="#contato"
+          href="/#contato"
           className="inline-flex h-10 items-center justify-center rounded-btn bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-soft transition-all hover:bg-primary-hover hover:-translate-y-[1px]"
         >
           Falar com especialista
