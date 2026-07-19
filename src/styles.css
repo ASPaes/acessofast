@@ -1,29 +1,37 @@
+/* ===== início de src/styles.css ===== */
+
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
+/* AcessoFast — site comercial (dark, estilo Linear)
+   CTA/botão primário = branco (--primary) · marca (links, logo, foco) = azul (--brand)
+   status/dados ao vivo = ciano (--brand-cyan) */
 :root {
-  --bg: #F5F7FA;
-  --surface: #FFFFFF;
-  --surface-2: #FBFCFE;
-  --border: #E6EAF0;
-  --text: #0F172A;
-  --text-muted: #64748B;
-  --primary: #2D6DF6;
-  --primary-hover: #245FE0;
-  --primary-soft: #EAF1FE;
-  --accent-blue: #2E90FA;
-  --success: #22C55E;
-  --warn: #F5A623;
-  --danger: #EF4444;
+  --bg: #08090B;
+  --surface: #101116;
+  --surface-2: #16171D;
+  --border: #1D1E25;
+  --border-strong: #2A2B33;
+  --text: #F4F5F6;
+  --text-muted: #8A8F99;
+  --text-faint: #5D616A;
+
+  --brand: #5C7CFA;
+  --brand-hover: #6E8AFF;
+  --brand-soft: #161B2E;
+  --brand-cyan: #3ACFE9;
+  --success: #3ECF8E;
+  --warn: #E8C24A;
+  --danger: #F26A73;
 
   --radius: 12px;
-  --radius-card: 16px;
-  --radius-btn: 12px;
-  --shadow-soft: 0 8px 30px rgba(15, 23, 42, 0.06);
-  --shadow-lift: 0 20px 50px rgba(15, 23, 42, 0.10);
+  --radius-card: 14px;
+  --radius-btn: 9px;
+  --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.35);
+  --shadow-lift: 0 40px 80px -30px rgba(0, 0, 0, 0.6);
 
   --background: var(--bg);
   --foreground: var(--text);
@@ -31,25 +39,26 @@
   --card-foreground: var(--text);
   --popover: var(--surface);
   --popover-foreground: var(--text);
-  --primary-foreground: #FFFFFF;
+  --primary: #F5F6F7;
+  --primary-foreground: #08090B;
   --secondary: var(--surface-2);
   --secondary-foreground: var(--text);
   --muted: var(--surface-2);
   --muted-foreground: var(--text-muted);
-  --accent: var(--primary-soft);
-  --accent-foreground: var(--primary);
+  --accent: var(--surface-2);
+  --accent-foreground: var(--text);
   --destructive: var(--danger);
   --destructive-foreground: #FFFFFF;
-  --input: var(--border);
-  --ring: var(--primary);
+  --input: var(--border-strong);
+  --ring: var(--brand);
   --sidebar: var(--surface);
   --sidebar-foreground: var(--text);
-  --sidebar-primary: var(--primary);
+  --sidebar-primary: var(--brand);
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: var(--primary-soft);
-  --sidebar-accent-foreground: var(--primary);
+  --sidebar-accent: var(--surface-2);
+  --sidebar-accent-foreground: var(--text);
   --sidebar-border: var(--border);
-  --sidebar-ring: var(--primary);
+  --sidebar-ring: var(--brand);
 }
 
 @theme inline {
@@ -59,14 +68,15 @@
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-text: var(--text);
   --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
 
-  --color-primary: var(--primary);
-  --color-primary-hover: var(--primary-hover);
-  --color-primary-soft: var(--primary-soft);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-accent-blue: var(--accent-blue);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-cyan: var(--brand-cyan);
   --color-success: var(--success);
   --color-warn: var(--warn);
   --color-danger: var(--danger);
@@ -75,6 +85,8 @@
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -85,7 +97,6 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-ring-offset-background: var(--background);
 
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -96,57 +107,45 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  --radius-sm: 8px;
-  --radius-md: 10px;
+  --radius-sm: 7px;
+  --radius-md: 9px;
   --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-2xl: 20px;
-  --radius-btn: 12px;
-  --radius-card: 16px;
+  --radius-xl: 14px;
+  --radius-2xl: 18px;
+  --radius-btn: 9px;
+  --radius-card: 14px;
 
-  --shadow-soft: 0 8px 30px rgba(15, 23, 42, 0.06);
-  --shadow-lift: 0 20px 50px rgba(15, 23, 42, 0.10);
+  --shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.35);
+  --shadow-lift: 0 40px 80px -30px rgba(0, 0, 0, 0.6);
 
-  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
 }
 
 @layer base {
-  * {
-    border-color: var(--color-border);
-  }
-  html {
-    scroll-behavior: smooth;
-  }
+  * { border-color: var(--color-border); }
+  html { scroll-behavior: smooth; }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
-    font-feature-settings: "ss01", "cv11";
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
-  ::selection {
-    background: var(--primary-soft);
-    color: var(--primary);
-  }
+  ::selection { background: color-mix(in oklab, var(--brand) 30%, transparent); color: var(--text); }
 }
 
-@utility shadow-soft {
-  box-shadow: var(--shadow-soft);
-}
-@utility shadow-lift {
-  box-shadow: var(--shadow-lift);
-}
+@utility shadow-soft { box-shadow: var(--shadow-soft); }
+@utility shadow-lift { box-shadow: var(--shadow-lift); }
 @utility glass {
-  background: color-mix(in oklab, white 72%, transparent);
-  backdrop-filter: saturate(180%) blur(20px);
+  background: color-mix(in oklab, #08090B 72%, transparent);
+  backdrop-filter: saturate(160%) blur(14px);
   border-bottom: 1px solid var(--border);
 }
 @utility mesh-hero {
   background:
-    radial-gradient(60% 50% at 15% 10%, color-mix(in oklab, var(--primary) 18%, transparent) 0%, transparent 60%),
-    radial-gradient(50% 45% at 90% 20%, color-mix(in oklab, var(--accent-blue) 22%, transparent) 0%, transparent 60%),
-    radial-gradient(45% 40% at 70% 90%, color-mix(in oklab, var(--primary) 12%, transparent) 0%, transparent 60%),
-    linear-gradient(180deg, #F7FAFF 0%, #F5F7FA 100%);
+    radial-gradient(60% 50% at 50% -10%, color-mix(in oklab, var(--brand) 8%, transparent) 0%, transparent 60%),
+    var(--bg);
 }
+/* ===== fim de src/styles.css ===== */
