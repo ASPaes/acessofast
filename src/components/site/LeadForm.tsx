@@ -151,7 +151,8 @@ export function LeadForm() {
           >
             <option value="">Selecione</option>
             <option value="MSP">MSP</option>
-            <option value="Clinica">Clínica</option>
+            <option value="Revenda de software">Revenda de software</option>
+            <option value="Suporte / Help desk">Suporte / Help desk</option>
             <option value="TI interno">TI interno</option>
             <option value="Outro">Outro</option>
           </select>
