@@ -5,8 +5,6 @@ import {
   Video,
   BookUser,
   FileClock,
-  KeyRound,
-  Smartphone,
   RefreshCw,
 } from "lucide-react";
 
