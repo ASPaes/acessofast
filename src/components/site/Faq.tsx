@@ -15,7 +15,7 @@ const faqs = [
     a: "Metadados de sessão (logs, address book, auditoria) ficam hospedados em região brasileira. Não armazenamos conteúdo das telas remotas. A plataforma foi desenhada para atender aos requisitos da LGPD.",
   },
   {
-    q: "Como é a cobrança por assento?",
+    q: "Como é a cobrança por técnico?",
     a: "Você paga por técnico simultâneo conectado, não por endpoint. Um assento pode gerenciar quantos dispositivos você precisar, sem cota de sessões nem cobrança de excedente.",
   },
   {
