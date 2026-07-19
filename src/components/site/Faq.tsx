@@ -19,7 +19,7 @@ const faqs = [
     a: "Você paga por técnico simultâneo conectado, não por endpoint. Cada técnico pode gerenciar quantos dispositivos você precisar, sem cota de sessões nem cobrança de excedente.",
   },
   {
-    q: "Consigo migrar do AnyDesk ou TeamViewer?",
+    q: "Consigo migrar da minha ferramenta atual?",
     a: "Sim. Nosso time apoia a migração com deploy silencioso via MSI ou script, importação do inventário de dispositivos e treinamento breve para a equipe.",
   },
   {
