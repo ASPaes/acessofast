@@ -39,8 +39,9 @@
   --card-foreground: var(--text);
   --popover: var(--surface);
   --popover-foreground: var(--text);
-  --primary: #F5F6F7;
-  --primary-foreground: #08090B;
+  --primary: #2E6BE6;
+  --primary-foreground: #FFFFFF;
+  --primary-hover: #2559C4;
   --secondary: var(--surface-2);
   --secondary-foreground: var(--text);
   --muted: var(--surface-2);
