@@ -28,9 +28,9 @@ export function Header() {
           <img
             src={logoAsset.url}
             alt="Acessofast"
-            className="h-14 w-auto md:h-16"
-            width={320}
-            height={64}
+            className="h-10 w-auto"
+            width={256}
+            height={195}
           />
         </a>
         <nav className="hidden items-center gap-8 md:flex">

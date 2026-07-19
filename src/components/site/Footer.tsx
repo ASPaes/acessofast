@@ -9,9 +9,9 @@ export function Footer() {
             <img
               src={logoAsset.url}
               alt="Acessofast"
-              className="h-20 w-auto"
-              width={400}
-              height={80}
+              className="h-11 w-auto"
+              width={256}
+              height={195}
             />
             <p className="mt-4 max-w-sm text-sm text-text-muted">
               Plataforma brasileira de acesso remoto e suporte de TI. Um produto da ASP Softwares.
