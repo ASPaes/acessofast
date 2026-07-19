@@ -21,7 +21,7 @@ export function Pricing() {
             </h2>
             <p className="mt-4 text-lg text-text-muted">
               Cada operação tem um contexto diferente — número de técnicos, endpoints e SLA.
-              Por isso trabalhamos com proposta personalizada, sempre no modelo por assento
+              Por isso trabalhamos com proposta personalizada, sempre no modelo por técnico
               simultâneo, sem letras miúdas.
             </p>
             <a
