@@ -8,23 +8,23 @@ import {
 const faqs = [
   {
     q: "Como funciona a segurança e a criptografia?",
-    a: "Toda sessão remota é criptografada ponta-a-ponta. O tráfego passa por relay próprio, com 2FA obrigatório por técnico e permissões granulares por dispositivo e grupo.",
+    a: "Toda sessão remota é criptografada ponta-a-ponta. O tráfego passa por relay próprio, com permissões granulares por dispositivo e grupo.",
   },
   {
     q: "Onde ficam meus dados? Está adequado à LGPD?",
     a: "Metadados de sessão (logs, address book, auditoria) ficam hospedados em região brasileira. Não armazenamos conteúdo das telas remotas. A plataforma foi desenhada para atender aos requisitos da LGPD.",
   },
   {
-    q: "Como é a cobrança por assento?",
-    a: "Você paga por técnico simultâneo conectado, não por endpoint. Um assento pode gerenciar quantos dispositivos você precisar, sem cota de sessões nem cobrança de excedente.",
+    q: "Como é a cobrança por técnico?",
+    a: "Você paga por técnico simultâneo conectado, não por endpoint. Cada técnico pode gerenciar quantos dispositivos você precisar, sem cota de sessões nem cobrança de excedente.",
   },
   {
-    q: "Consigo migrar do AnyDesk ou TeamViewer?",
+    q: "Consigo migrar da minha ferramenta atual?",
     a: "Sim. Nosso time apoia a migração com deploy silencioso via MSI ou script, importação do inventário de dispositivos e treinamento breve para a equipe.",
   },
   {
     q: "Quais são os requisitos técnicos?",
-    a: "Cliente para Windows, macOS e Linux, além de apps iOS e Android para atender de qualquer lugar. Requer apenas conexão de internet padrão — funciona atrás de NAT e proxy corporativo.",
+    a: "Cliente para Windows, macOS e Linux. Requer apenas conexão de internet padrão — funciona atrás de NAT e proxy corporativo.",
   },
 ];
 
