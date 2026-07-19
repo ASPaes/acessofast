@@ -41,10 +41,10 @@ export function Hero() {
           <div className="relative overflow-hidden rounded-card border border-border bg-surface shadow-lift">
             <img
               src={heroMockup.url}
-              alt="Painel do Acessofast mostrando sessões de acesso remoto ativas"
+              alt="Painel do Acessofast mostrando dispositivos cadastrados no address book"
               className="w-full"
-              width={1200}
-              height={675}
+              width={1903}
+              height={912}
               loading="eager"
             />
           </div>
