@@ -75,7 +75,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 
 const SITE_TITLE = "Acessofast — Acesso remoto e suporte de TI sem surpresa no custo";
 const SITE_DESCRIPTION =
-  "Alternativa brasileira ao AnyDesk e ao TeamViewer para MSPs, clínicas e times de TI. Cobrança transparente por assento, soberania de dados e suporte em português.";
+  "Alternativa brasileira ao AnyDesk e ao TeamViewer para MSPs, provedores de suporte e equipes de TI. Cobrança transparente por técnico simultâneo, soberania de dados e suporte em português.";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
