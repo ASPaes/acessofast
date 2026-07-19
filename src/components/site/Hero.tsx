@@ -53,7 +53,7 @@ export function Hero() {
               <div className="flex items-center gap-3">
                 <span className="h-2.5 w-2.5 rounded-full bg-success shadow-[0_0_0_4px_color-mix(in_oklab,var(--success)_20%,transparent)]" />
                 <span className="text-sm font-medium text-text">
-                  Sessão conectada · <span className="font-mono text-accent-blue">ID 481 902 337</span>
+                  12 dispositivos · <span className="font-mono text-success">3 online</span>
                 </span>
               </div>
             </div>
