@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import logoAsset from "@/assets/acessofast-logo-real.png.asset.json";
 
 const nav = [
@@ -43,6 +44,7 @@ export function Header() {
               {n.label}
             </a>
           ))}
+          <Link to="/baixar" className="text-sm font-medium text-text-muted transition-colors hover:text-text">Baixar</Link>
         </nav>
         <a
           href="#contato"
