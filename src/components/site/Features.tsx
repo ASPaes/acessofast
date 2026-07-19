@@ -5,6 +5,8 @@ import {
   Video,
   BookUser,
   FileClock,
+  KeyRound,
+  Smartphone,
   RefreshCw,
 } from "lucide-react";
 
@@ -15,6 +17,8 @@ const features = [
   { icon: Video, title: "Gravação de sessão", desc: "Grave atendimentos para auditoria, treinamento e compliance interno." },
   { icon: BookUser, title: "Address book", desc: "Organize dispositivos por cliente, tags e grupos com busca instantânea." },
   { icon: FileClock, title: "Auditoria e logs", desc: "Registro completo de quem conectou, quando, onde e por quanto tempo." },
+  { icon: KeyRound, title: "2FA por técnico", desc: "Autenticação em dois fatores obrigatória para todo acesso remoto." },
+  { icon: Smartphone, title: "Apps mobile", desc: "Atenda de qualquer lugar pelo aplicativo iOS e Android." },
   { icon: RefreshCw, title: "Reconexão pós-reboot", desc: "Sessão volta sozinha após reinicialização, sem perder o atendimento." },
 ];
 
@@ -30,7 +34,7 @@ export function Features() {
             Tudo que sua operação precisa, em uma única plataforma.
           </h2>
           <p className="mt-4 text-lg text-text-muted">
-            Sem plugins pagos, sem módulos extras. Todo recurso essencial já vem incluído.
+            Sem plugins pagos, sem módulos extras. Todo recurso essencial já vem no assento.
           </p>
         </div>
 
