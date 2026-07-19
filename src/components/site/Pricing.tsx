@@ -2,7 +2,7 @@ import { Check } from "lucide-react";
 
 const perks = [
   "Cobrança por técnico simultâneo, não por endpoint",
-  "Endpoints ilimitados por assento",
+  "Endpoints ilimitados por técnico",
   "Sem cota de sessões nem excedente",
   "Contratos anuais com preço travado",
 ];
