@@ -16,9 +16,9 @@ export function Hero() {
             <span className="block text-primary">sem surpresa no custo.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg text-text-muted">
-            A alternativa brasileira ao AnyDesk e ao TeamViewer para MSPs, clínicas e
-            departamentos de TI. Cobrança transparente por assento, soberania de dados e
-            suporte em português.
+            A plataforma brasileira de acesso remoto e suporte de TI para MSPs, provedores de
+            suporte e equipes de TI. Cobrança transparente por técnico simultâneo, soberania de
+            dados e suporte em português.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
             <a

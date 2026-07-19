@@ -2,7 +2,7 @@ import { Check } from "lucide-react";
 
 const perks = [
   "Cobrança por técnico simultâneo, não por endpoint",
-  "Endpoints ilimitados por assento",
+  "Endpoints ilimitados por técnico",
   "Sem cota de sessões nem excedente",
   "Contratos anuais com preço travado",
 ];
@@ -21,7 +21,7 @@ export function Pricing() {
             </h2>
             <p className="mt-4 text-lg text-text-muted">
               Cada operação tem um contexto diferente — número de técnicos, endpoints e SLA.
-              Por isso trabalhamos com proposta personalizada, sempre no modelo por assento
+              Por isso trabalhamos com proposta personalizada, sempre no modelo por técnico
               simultâneo, sem letras miúdas.
             </p>
             <a
@@ -34,7 +34,7 @@ export function Pricing() {
           <div className="rounded-card border border-border bg-surface-2 p-8 shadow-soft">
             <p className="text-sm font-medium text-text-muted">Modelo</p>
             <p className="mt-1 text-2xl font-bold tracking-tight text-text">
-              Por assento (técnico simultâneo)
+              Por técnico simultâneo
             </p>
             <ul className="mt-6 space-y-3">
               {perks.map((p) => (
