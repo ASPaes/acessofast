@@ -30,7 +30,7 @@ export function Features() {
             Tudo que sua operação precisa, em uma única plataforma.
           </h2>
           <p className="mt-4 text-lg text-text-muted">
-            Sem plugins pagos, sem módulos extras. Todo recurso essencial já vem no assento.
+            Sem plugins pagos, sem módulos extras. Todo recurso essencial já vem incluído.
           </p>
         </div>
 
