@@ -8,7 +8,7 @@ import {
 const faqs = [
   {
     q: "Como funciona a segurança e a criptografia?",
-    a: "Toda sessão remota é criptografada ponta-a-ponta. O tráfego passa por relay próprio, com 2FA obrigatório por técnico e permissões granulares por dispositivo e grupo.",
+    a: "Toda sessão remota é criptografada ponta-a-ponta. O tráfego passa por relay próprio, com permissões granulares por dispositivo e grupo.",
   },
   {
     q: "Onde ficam meus dados? Está adequado à LGPD?",
