@@ -25,7 +25,7 @@ export function HowItWorks() {
             Como funciona
           </p>
           <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-text sm:text-5xl">
-            Do zero ao primeiro atendimento em minutos.
+            Do zero ao primeiro atendimento em segundos.
           </h2>
         </div>
         <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3">
