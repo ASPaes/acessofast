@@ -6,13 +6,16 @@ export function Footer() {
       <div className="mx-auto max-w-6xl px-6 py-12">
         <div className="grid grid-cols-1 gap-10 md:grid-cols-4">
           <div className="md:col-span-2">
-            <img
-              src={logoAsset.url}
-              alt="Acessofast"
-              className="h-11 w-auto"
-              width={256}
-              height={195}
-            />
+            <div className="flex items-center gap-2.5">
+              <img
+                src={logoAsset.url}
+                alt="Acessofast"
+                className="h-11 w-auto"
+                width={256}
+                height={195}
+              />
+              <span className="text-xl font-semibold tracking-tight text-text">AcessoFast</span>
+            </div>
             <p className="mt-4 max-w-sm text-sm text-text-muted">
               Plataforma brasileira de acesso remoto e suporte de TI. Um produto da ASP Softwares.
             </p>
