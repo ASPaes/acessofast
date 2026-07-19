@@ -1,4 +1,4 @@
-import logoAsset from "@/assets/acessofast-logo.png.asset.json";
+import logoAsset from "@/assets/acessofast-logo-real.png.asset.json";
 
 export function Footer() {
   return (
