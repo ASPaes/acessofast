@@ -24,7 +24,7 @@ const faqs = [
   },
   {
     q: "Quais são os requisitos técnicos?",
-    a: "Cliente para Windows, macOS e Linux, além de apps iOS e Android para atender de qualquer lugar. Requer apenas conexão de internet padrão — funciona atrás de NAT e proxy corporativo.",
+    a: "Cliente para Windows, macOS e Linux. Requer apenas conexão de internet padrão — funciona atrás de NAT e proxy corporativo.",
   },
 ];
 
