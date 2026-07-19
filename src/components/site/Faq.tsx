@@ -16,7 +16,7 @@ const faqs = [
   },
   {
     q: "Como é a cobrança por técnico?",
-    a: "Você paga por técnico simultâneo conectado, não por endpoint. Um assento pode gerenciar quantos dispositivos você precisar, sem cota de sessões nem cobrança de excedente.",
+    a: "Você paga por técnico simultâneo conectado, não por endpoint. Cada técnico pode gerenciar quantos dispositivos você precisar, sem cota de sessões nem cobrança de excedente.",
   },
   {
     q: "Consigo migrar do AnyDesk ou TeamViewer?",
