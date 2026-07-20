@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import heroMockup from "@/assets/acessofast-dashboard-screenshot.png.asset.json";
+import heroMockup from "@/assets/acessofast-dashboard-screenshot-v2.png.asset.json";
 
 
 export function Hero() {
