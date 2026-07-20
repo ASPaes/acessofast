@@ -39,9 +39,8 @@ function BaixarPage() {
             Instale o aplicativo, informe seu ID ao técnico e pronto. Sem cadastro, sem configuração.
           </p>
 
-          {/* TODO: trocar href="#" pela URL real do instalador quando publicado */}
           <a
-            href="#"
+            href="https://github.com/ASPaes/acessofast-agent/releases/latest/download/AcessoFastSetup.exe"
             className="group mt-8 inline-flex h-14 items-center gap-3 rounded-btn bg-primary px-8 text-base font-semibold text-primary-foreground shadow-soft transition-all hover:bg-primary-hover hover:-translate-y-[1px]"
           >
             <Download className="h-5 w-5" strokeWidth={2} />
