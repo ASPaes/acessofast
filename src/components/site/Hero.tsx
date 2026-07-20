@@ -1,5 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import heroMockup from "@/assets/acessofast-dashboard-screenshot.png.asset.json";
+import heroMockup from "@/assets/acessofast-dashboard-screenshot-v2.png.asset.json";
 
 
 export function Hero() {
@@ -43,8 +43,8 @@ export function Hero() {
               src={heroMockup.url}
               alt="Painel do Acessofast mostrando dispositivos cadastrados no address book"
               className="w-full"
-              width={1903}
-              height={912}
+              width={1804}
+              height={872}
               loading="eager"
             />
           </div>
