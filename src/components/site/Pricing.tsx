@@ -7,7 +7,7 @@ type Billing = "mensal" | "anual";
 const plans = [
   { name: "AcessoFast Team", users: "Até 10 usuários", sessions: "Até 5 acessos simultâneos por técnico", mensal: "R$ 299", anualMes: "R$ 249", anualTotal: "R$ 2.988" },
   { name: "AcessoFast Business", users: "Até 20 usuários", sessions: "Até 10 acessos simultâneos por técnico", mensal: "R$ 539", anualMes: "R$ 449", anualTotal: "R$ 5.388" },
-  { name: "AcessoFast Scale", users: "Até 50 usuários", sessions: "Acessos simultâneos ilimitados por técnico", note: true, mensal: "R$ 1.079", anualMes: "R$ 899", anualTotal: "R$ 10.788" },
+  { name: "AcessoFast Scale", users: "Até 50 usuários", sessions: "Acessos simultâneos ilimitados por técnico", mensal: "R$ 1.079", anualMes: "R$ 899", anualTotal: "R$ 10.788" },
   { name: "AcessoFast Enterprise", users: "Usuários sob medida", sessions: "Configuração personalizada", custom: true },
 ];
 
@@ -44,7 +44,7 @@ export function Pricing() {
               )}
               <ul className="mt-6 flex-1 space-y-3 text-left">
                 <li className="flex items-start gap-3"><span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-success/15 text-success"><Check className="h-3.5 w-3.5" strokeWidth={2.5} /></span><span className="text-[15px] text-text">{p.users}</span></li>
-                <li className="flex items-start gap-3"><span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-success/15 text-success"><Check className="h-3.5 w-3.5" strokeWidth={2.5} /></span><span className="text-[15px] text-text">{p.sessions}{p.note && <sup className="ml-0.5 text-primary">*</sup>}</span></li>
+                <li className="flex items-start gap-3"><span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-success/15 text-success"><Check className="h-3.5 w-3.5" strokeWidth={2.5} /></span><span className="text-[15px] text-text">{p.sessions}</span></li>
               </ul>
               {/* TODO: trocar href="#contato" pelo link de pagamento do Asaas deste plano */}
               <a href="#contato" className="mt-8 inline-flex h-11 items-center justify-center rounded-btn bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-soft transition-all hover:bg-primary-hover hover:-translate-y-[1px]">
@@ -53,7 +53,7 @@ export function Pricing() {
             </div>
           ))}
         </div>
-        <p className="mt-8 text-center text-sm text-text-muted">* Sem limite de acessos simultâneos por técnico.</p>
+        
       </div>
     </section>
   );
