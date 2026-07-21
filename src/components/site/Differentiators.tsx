@@ -3,9 +3,9 @@ import { Coins, ShieldOff, Database, Flag } from "lucide-react";
 const items = [
   {
     icon: Coins,
-    title: "Custo transparente por técnico",
+    title: "Custo transparente",
     desc:
-      "Você paga por técnico simultâneo. Sem cobrança por endpoint, sem cota de sessões com excedente, sem aumento surpresa na renovação.",
+      "Planos com preço fechado e endpoints ilimitados. Sem cobrança por máquina gerenciada, sem excedente escondido e sem aumento surpresa na renovação.",
   },
   {
     icon: ShieldOff,
