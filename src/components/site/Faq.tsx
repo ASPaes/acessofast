@@ -19,12 +19,8 @@ const faqs = [
     a: "Você escolhe um plano com um número definido de usuários e de acessos simultâneos por técnico, com endpoints ilimitados em todos eles. Preço fechado, sem cobrança por máquina gerenciada e sem excedente.",
   },
   {
-    q: "Consigo migrar da minha ferramenta atual?",
-    a: "Sim. Nosso time apoia a migração com deploy silencioso via MSI ou script, importação do inventário de dispositivos e treinamento breve para a equipe.",
-  },
-  {
     q: "Quais são os requisitos técnicos?",
-    a: "Cliente para Windows, macOS e Linux. Requer apenas conexão de internet padrão — funciona atrás de NAT e proxy corporativo.",
+    a: "Cliente para Windows disponível agora, com versões para macOS e Linux em desenvolvimento. Requer apenas conexão de internet padrão — funciona atrás de NAT e proxy corporativo.",
   },
 ];
 
