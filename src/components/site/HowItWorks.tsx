@@ -2,7 +2,7 @@ const steps = [
   {
     n: "01",
     title: "Instale o cliente",
-    desc: "Um instalador enxuto para Windows, macOS e Linux. Deploy silencioso via MSI ou script.",
+    desc: "Um instalador único para Windows, rápido de instalar e sem configuração. macOS e Linux em desenvolvimento.",
   },
   {
     n: "02",

@@ -20,6 +20,7 @@ export type Database = {
           alias: string | null
           approved_at: string | null
           approved_by: string | null
+          client_id: string | null
           created_at: string
           created_by: string | null
           deactivated_at: string | null
@@ -40,6 +41,7 @@ export type Database = {
           alias?: string | null
           approved_at?: string | null
           approved_by?: string | null
+          client_id?: string | null
           created_at?: string
           created_by?: string | null
           deactivated_at?: string | null
@@ -60,6 +62,7 @@ export type Database = {
           alias?: string | null
           approved_at?: string | null
           approved_by?: string | null
+          client_id?: string | null
           created_at?: string
           created_by?: string | null
           deactivated_at?: string | null
@@ -77,6 +80,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "address_book_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "address_book_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
@@ -92,6 +102,92 @@ export type Database = {
           },
           {
             foreignKeyName: "address_book_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      asaas_events: {
+        Row: {
+          event_id: string
+          event_type: string
+          external_reference: string | null
+          id: string
+          payload: Json
+          payment_id: string | null
+          processed: boolean
+          processed_at: string | null
+          processing_result: string | null
+          received_at: string
+          subscription_id: string | null
+        }
+        Insert: {
+          event_id: string
+          event_type: string
+          external_reference?: string | null
+          id?: string
+          payload: Json
+          payment_id?: string | null
+          processed?: boolean
+          processed_at?: string | null
+          processing_result?: string | null
+          received_at?: string
+          subscription_id?: string | null
+        }
+        Update: {
+          event_id?: string
+          event_type?: string
+          external_reference?: string | null
+          id?: string
+          payload?: Json
+          payment_id?: string | null
+          processed?: boolean
+          processed_at?: string | null
+          processing_result?: string | null
+          received_at?: string
+          subscription_id?: string | null
+        }
+        Relationships: []
+      }
+      clients: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          document: string | null
+          document_type: Database["public"]["Enums"]["document_type"] | null
+          id: string
+          is_active: boolean
+          name: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          document?: string | null
+          document_type?: Database["public"]["Enums"]["document_type"] | null
+          id?: string
+          is_active?: boolean
+          name: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          document?: string | null
+          document_type?: Database["public"]["Enums"]["document_type"] | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -428,6 +524,45 @@ export type Database = {
         }
         Relationships: []
       }
+      plans: {
+        Row: {
+          code: string
+          created_at: string
+          is_active: boolean
+          is_custom: boolean
+          max_concurrent_per_tech: number | null
+          max_users: number | null
+          name: string
+          price_month_cents: number | null
+          price_year_cents: number | null
+          sort_order: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          is_active?: boolean
+          is_custom?: boolean
+          max_concurrent_per_tech?: number | null
+          max_users?: number | null
+          name: string
+          price_month_cents?: number | null
+          price_year_cents?: number | null
+          sort_order?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          is_active?: boolean
+          is_custom?: boolean
+          max_concurrent_per_tech?: number | null
+          max_users?: number | null
+          name?: string
+          price_month_cents?: number | null
+          price_year_cents?: number | null
+          sort_order?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -462,6 +597,87 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "profiles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      signup_intents: {
+        Row: {
+          admin_email: string
+          amount_cents: number
+          asaas_checkout_id: string | null
+          asaas_customer_id: string | null
+          asaas_payment_id: string | null
+          asaas_subscription_id: string | null
+          billing_cycle: string
+          cnpj: string
+          company_name: string
+          consent: boolean
+          created_at: string
+          failure_reason: string | null
+          id: string
+          phone: string | null
+          plan_code: string
+          provisioned_at: string | null
+          status: string
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_email: string
+          amount_cents: number
+          asaas_checkout_id?: string | null
+          asaas_customer_id?: string | null
+          asaas_payment_id?: string | null
+          asaas_subscription_id?: string | null
+          billing_cycle: string
+          cnpj: string
+          company_name: string
+          consent?: boolean
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          phone?: string | null
+          plan_code: string
+          provisioned_at?: string | null
+          status?: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_email?: string
+          amount_cents?: number
+          asaas_checkout_id?: string | null
+          asaas_customer_id?: string | null
+          asaas_payment_id?: string | null
+          asaas_subscription_id?: string | null
+          billing_cycle?: string
+          cnpj?: string
+          company_name?: string
+          consent?: boolean
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          phone?: string | null
+          plan_code?: string
+          provisioned_at?: string | null
+          status?: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signup_intents_plan_code_fkey"
+            columns: ["plan_code"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "signup_intents_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -561,36 +777,62 @@ export type Database = {
       }
       tenants: {
         Row: {
+          asaas_customer_id: string | null
+          asaas_subscription_id: string | null
+          billing_email: string | null
+          cnpj: string | null
           created_at: string
           id: string
           is_active: boolean
+          max_concurrent_per_tech: number | null
           name: string
+          plan_code: string | null
           relay_quota_gb: number
           seat_limit: number
           slug: string | null
           updated_at: string
         }
         Insert: {
+          asaas_customer_id?: string | null
+          asaas_subscription_id?: string | null
+          billing_email?: string | null
+          cnpj?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
+          max_concurrent_per_tech?: number | null
           name: string
+          plan_code?: string | null
           relay_quota_gb?: number
           seat_limit?: number
           slug?: string | null
           updated_at?: string
         }
         Update: {
+          asaas_customer_id?: string | null
+          asaas_subscription_id?: string | null
+          billing_email?: string | null
+          cnpj?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
+          max_concurrent_per_tech?: number | null
           name?: string
+          plan_code?: string | null
           relay_quota_gb?: number
           seat_limit?: number
           slug?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tenants_plan_code_fkey"
+            columns: ["plan_code"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["code"]
+          },
+        ]
       }
       vps_metrics: {
         Row: {
@@ -789,6 +1031,21 @@ export type Database = {
         }
         Returns: undefined
       }
+      assign_plan: {
+        Args: {
+          p_code: string
+          p_conc_override?: number
+          p_seat_override?: number
+          p_tenant: string
+        }
+        Returns: {
+          current_users: number
+          max_concurrent_per_tech: number
+          over_limit: boolean
+          plan_code: string
+          seat_limit: number
+        }[]
+      }
       claim_poll: {
         Args: { p_nonce_hash: string; p_rustdesk_id: string }
         Returns: string
@@ -886,6 +1143,14 @@ export type Database = {
         Args: { p_feature_key: string; p_tenant_id: string }
         Returns: boolean
       }
+      tenant_seat_usage: {
+        Args: { p_tenant: string }
+        Returns: {
+          can_add: boolean
+          limit_users: number
+          used: number
+        }[]
+      }
       vps_metrics_series: {
         Args: { p_bucket?: string; p_since?: string }
         Returns: {
@@ -905,6 +1170,7 @@ export type Database = {
       }
     }
     Enums: {
+      document_type: "cnpj" | "cpf"
       enrollment_status: "pending" | "approved" | "rejected"
       lead_status: "novo" | "em_contato" | "qualificado" | "ganho" | "perdido"
       session_status: "active" | "ended" | "failed"
@@ -1036,6 +1302,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      document_type: ["cnpj", "cpf"],
       enrollment_status: ["pending", "approved", "rejected"],
       lead_status: ["novo", "em_contato", "qualificado", "ganho", "perdido"],
       session_status: ["active", "ended", "failed"],
