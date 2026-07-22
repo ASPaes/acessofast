@@ -6,8 +6,8 @@ const steps = [
   },
   {
     n: "02",
-    title: "Dispositivo no painel",
-    desc: "Cada máquina aparece automaticamente no seu address book, organizada por cliente e tag.",
+    title: "Adicione o dispositivo",
+    desc: "Adicione no painel o ID que aparece no cliente. Ele fica salvo no seu address book, organizado por cliente e tag.",
   },
   {
     n: "03",
