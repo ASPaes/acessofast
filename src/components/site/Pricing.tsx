@@ -6,8 +6,16 @@ import { Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
-type Billing = "mensal" | "anual";
+/** Opções do toggle. "individual" é uma visão à parte, não um ciclo de cobrança. */
+type View = "mensal" | "anual" | "individual";
+type BillingCycle = "mensal" | "anual";
 type PlanAction = "subscribe" | "trial" | "free" | "contact";
+
+const VIEWS: { value: View; label: string }[] = [
+  { value: "mensal", label: "Mensal" },
+  { value: "anual", label: "Anual" },
+  { value: "individual", label: "Individual" },
+];
 
 const PLAN_COLUMNS =
   "code,name,price_month_cents,price_year_cents,max_users,max_concurrent_per_tech,is_custom,is_active,sort_order" as const;
@@ -28,8 +36,13 @@ type Plan = Pick<
 type PlanButton = { action: PlanAction; label: string; variant: "primary" | "secondary" };
 
 export type PricingProps = {
-  /** Recebe a intenção do visitante. A Tarefa 2 pluga o formulário aqui. */
-  onSelectPlan?: (planCode: string, action: PlanAction, billingCycle: Billing) => void;
+  /**
+   * Recebe a intenção do visitante. A Tarefa 2 pluga o formulário aqui.
+   * billingCycle continua só "mensal" | "anual": a view "individual" envia "mensal",
+   * já que o ciclo é irrelevante para as ações free/trial e um ciclo "individual"
+   * não existe do lado da cobrança.
+   */
+  onSelectPlan?: (planCode: string, action: PlanAction, billingCycle: BillingCycle) => void;
 };
 
 const brlWhole = new Intl.NumberFormat("pt-BR", {
@@ -46,7 +59,7 @@ function formatCents(cents: number) {
 }
 
 /** Valor mensal exibido. No anual é calculado: price_year_cents é o TOTAL do ano. */
-function monthlyCents(plan: Plan, billing: Billing): number | null {
+function monthlyCents(plan: Plan, billing: BillingCycle): number | null {
   if (billing === "anual") {
     return plan.price_year_cents === null ? null : plan.price_year_cents / 12;
   }
@@ -89,8 +102,58 @@ const primaryButtonClass =
 const secondaryButtonClass =
   "inline-flex h-11 items-center justify-center rounded-btn border border-primary/40 bg-transparent px-5 text-sm font-semibold text-primary transition-all hover:bg-primary/10 hover:-translate-y-[1px]";
 
+function PlanCard({
+  plan,
+  billing,
+  onSelect,
+}: {
+  plan: Plan;
+  billing: BillingCycle;
+  onSelect: (planCode: string, action: PlanAction) => void;
+}) {
+  const isFree = !plan.is_custom && plan.price_month_cents === 0;
+  const perMonth = monthlyCents(plan, billing);
+
+  return (
+    <div className="flex h-full flex-col rounded-card border border-border bg-surface-2 p-6 shadow-soft">
+      <h3 className="text-lg font-bold tracking-tight text-text">{plan.name}</h3>
+      {isFree ? (
+        <div className="mt-4"><span className="text-3xl font-extrabold tracking-tight text-text">Grátis</span></div>
+      ) : plan.is_custom || perMonth === null ? (
+        <div className="mt-4"><span className="text-3xl font-extrabold tracking-tight text-text">Sob consulta</span></div>
+      ) : (
+        <div className="mt-4">
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-3xl font-extrabold tracking-tight text-text">{formatCents(perMonth)}</span>
+            <span className="text-sm text-text-muted">/mês</span>
+          </div>
+          <p className="mt-1 text-sm text-text-muted">{billing === "anual" && plan.price_year_cents !== null ? `${formatCents(plan.price_year_cents)} cobrados por ano` : "Cobrança mensal, sem fidelidade"}</p>
+        </div>
+      )}
+      <ul className="mt-6 flex-1 space-y-3 text-left">
+        <li className="flex items-start gap-3"><span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-success/15 text-success"><Check className="h-3.5 w-3.5" strokeWidth={2.5} /></span><span className="text-[15px] text-text">{usersLabel(plan)}</span></li>
+        <li className="flex items-start gap-3"><span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-success/15 text-success"><Check className="h-3.5 w-3.5" strokeWidth={2.5} /></span><span className="text-[15px] text-text">{concurrencyLabel(plan)}</span></li>
+      </ul>
+      <div className="mt-8 flex flex-col gap-2">
+        {planButtons(plan).map((b) => (
+          <button
+            key={b.action}
+            type="button"
+            onClick={() => onSelect(plan.code, b.action)}
+            className={b.variant === "primary" ? primaryButtonClass : secondaryButtonClass}
+          >
+            {b.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function Pricing({ onSelectPlan }: PricingProps) {
-  const [billing, setBilling] = useState<Billing>("anual");
+  const [view, setView] = useState<View>("anual");
+  // A view "individual" não é um ciclo: para cálculo/callback ela equivale a mensal.
+  const billing: BillingCycle = view === "individual" ? "mensal" : view;
 
   const {
     data: plans,
@@ -119,7 +182,11 @@ export function Pricing({ onSelectPlan }: PricingProps) {
     console.log("[pricing] select", planCode, action, billing);
   };
 
-  const hasPlans = !!plans && plans.length > 0;
+  // Individual sai da grade e vira uma visão própria do toggle.
+  const visiblePlans = (plans ?? []).filter((p) =>
+    view === "individual" ? p.code === "individual" : p.code !== "individual",
+  );
+  const hasPlans = visiblePlans.length > 0;
 
   return (
     <section id="preco" className="bg-surface py-28">
@@ -129,8 +196,9 @@ export function Pricing({ onSelectPlan }: PricingProps) {
           <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-text sm:text-5xl">Escolha o plano da sua operação.</h2>
           <p className="mx-auto mt-4 max-w-xl text-lg text-text-muted">Preço fechado, sem excedente e sem reajuste surpresa.</p>
           <div className="mt-8 inline-flex items-center gap-1 rounded-full border border-border bg-bg p-1">
-            <button type="button" onClick={() => setBilling("mensal")} className={`rounded-full px-6 py-2 text-sm font-medium transition-colors ${billing === "mensal" ? "bg-primary text-primary-foreground" : "text-text-muted hover:text-text"}`}>Mensal</button>
-            <button type="button" onClick={() => setBilling("anual")} className={`rounded-full px-6 py-2 text-sm font-medium transition-colors ${billing === "anual" ? "bg-primary text-primary-foreground" : "text-text-muted hover:text-text"}`}>Anual</button>
+            {VIEWS.map((v) => (
+              <button key={v.value} type="button" onClick={() => setView(v.value)} className={`rounded-full px-6 py-2 text-sm font-medium transition-colors ${view === v.value ? "bg-primary text-primary-foreground" : "text-text-muted hover:text-text"}`}>{v.label}</button>
+            ))}
           </div>
         </div>
 
@@ -153,47 +221,27 @@ export function Pricing({ onSelectPlan }: PricingProps) {
           <p className="mt-14 text-center text-[15px] text-text-muted">
             Não foi possível carregar os planos. Recarregue a página.
           </p>
+        ) : view === "individual" ? (
+          <div className="mt-14 mx-auto flex max-w-3xl flex-col items-center gap-8 md:flex-row md:items-stretch md:justify-center">
+            <div className="max-w-sm text-center md:text-left md:self-center">
+              <h3 className="text-2xl font-extrabold tracking-tight text-text">
+                Comece sem custo
+              </h3>
+              <p className="mt-3 text-[15px] leading-relaxed text-text-muted">
+                Ideal para técnicos autônomos — 1 usuário, 1 acesso sem custo.
+              </p>
+            </div>
+            <div className="w-full max-w-sm">
+              {visiblePlans.map((p) => (
+                <PlanCard key={p.code} plan={p} billing={billing} onSelect={handleSelect} />
+              ))}
+            </div>
+          </div>
         ) : (
           <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {plans.map((p) => {
-              const isFree = !p.is_custom && p.price_month_cents === 0;
-              const perMonth = monthlyCents(p, billing);
-
-              return (
-                <div key={p.code} className="flex flex-col rounded-card border border-border bg-surface-2 p-6 shadow-soft">
-                  <h3 className="text-lg font-bold tracking-tight text-text">{p.name}</h3>
-                  {isFree ? (
-                    <div className="mt-4"><span className="text-3xl font-extrabold tracking-tight text-text">Grátis</span></div>
-                  ) : p.is_custom || perMonth === null ? (
-                    <div className="mt-4"><span className="text-3xl font-extrabold tracking-tight text-text">Sob consulta</span></div>
-                  ) : (
-                    <div className="mt-4">
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-3xl font-extrabold tracking-tight text-text">{formatCents(perMonth)}</span>
-                        <span className="text-sm text-text-muted">/mês</span>
-                      </div>
-                      <p className="mt-1 text-sm text-text-muted">{billing === "anual" && p.price_year_cents !== null ? `${formatCents(p.price_year_cents)} cobrados por ano` : "Cobrança mensal, sem fidelidade"}</p>
-                    </div>
-                  )}
-                  <ul className="mt-6 flex-1 space-y-3 text-left">
-                    <li className="flex items-start gap-3"><span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-success/15 text-success"><Check className="h-3.5 w-3.5" strokeWidth={2.5} /></span><span className="text-[15px] text-text">{usersLabel(p)}</span></li>
-                    <li className="flex items-start gap-3"><span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-success/15 text-success"><Check className="h-3.5 w-3.5" strokeWidth={2.5} /></span><span className="text-[15px] text-text">{concurrencyLabel(p)}</span></li>
-                  </ul>
-                  <div className="mt-8 flex flex-col gap-2">
-                    {planButtons(p).map((b) => (
-                      <button
-                        key={b.action}
-                        type="button"
-                        onClick={() => handleSelect(p.code, b.action)}
-                        className={b.variant === "primary" ? primaryButtonClass : secondaryButtonClass}
-                      >
-                        {b.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
+            {visiblePlans.map((p) => (
+              <PlanCard key={p.code} plan={p} billing={billing} onSelect={handleSelect} />
+            ))}
           </div>
         )}
 
