@@ -97,6 +97,9 @@ function planButtons(plan: Plan): PlanButton[] {
   return [{ action: "subscribe", label: "Assinar", variant: "primary" }];
 }
 
+/** Plano em destaque na grade (mensal e anual). Não aparece na visão individual. */
+const RECOMMENDED_PLAN_CODE = "business";
+
 const primaryButtonClass =
   "inline-flex h-11 items-center justify-center rounded-btn bg-primary px-5 text-sm font-semibold text-primary-foreground shadow-soft transition-all hover:bg-primary-hover hover:-translate-y-[1px]";
 const secondaryButtonClass =
@@ -113,9 +116,21 @@ function PlanCard({
 }) {
   const isFree = !plan.is_custom && plan.price_month_cents === 0;
   const perMonth = monthlyCents(plan, billing);
+  const isRecommended = plan.code === RECOMMENDED_PLAN_CODE;
 
   return (
-    <div className="flex h-full flex-col rounded-card border border-border bg-surface-2 p-6 shadow-soft">
+    <div
+      className={`relative flex h-full flex-col rounded-card bg-surface-2 p-6 ${
+        isRecommended
+          ? "border-2 border-primary shadow-lg shadow-primary/10"
+          : "border border-border shadow-soft"
+      }`}
+    >
+      {isRecommended && (
+        <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary-foreground shadow-soft">
+          Recomendado
+        </span>
+      )}
       <h3 className="text-lg font-bold tracking-tight text-text">{plan.name}</h3>
       {isFree ? (
         <div className="mt-4"><span className="text-3xl font-extrabold tracking-tight text-text">Grátis</span></div>
