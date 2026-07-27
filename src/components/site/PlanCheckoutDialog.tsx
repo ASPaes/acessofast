@@ -50,6 +50,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   invalid_document: "CPF ou CNPJ inválido.",
   plan_not_eligible: "Este plano não está disponível para esta ação.",
   plan_not_self_serve: "Este plano não está disponível para esta ação.",
+  plan_not_free: "Este plano não está disponível para esta ação.",
+  document_already_used: "Este documento já possui uma conta.",
   rate_limited: "Muitas tentativas. Aguarde um instante e tente de novo.",
 };
 
@@ -136,7 +138,7 @@ export function PlanCheckoutDialog({
 
     try {
       if (plan.action === "subscribe") {
-        const { data, error } = await supabase.functions.invoke("create-checkout-sandbox", {
+        const { data, error } = await supabase.functions.invoke("create-checkout-prod", {
           body: { ...base, billing_cycle: plan.billingCycle === "anual" ? "annual" : "monthly" },
         });
         if (error) {
@@ -155,7 +157,9 @@ export function PlanCheckoutDialog({
         return;
       }
 
-      const { data, error } = await supabase.functions.invoke("start-trial", {
+      // Individual grátis provisiona sem expiração; trial nasce com 7 dias.
+      const fn = plan.action === "free" ? "start-free-prod" : "start-trial-prod";
+      const { data, error } = await supabase.functions.invoke(fn, {
         body: { ...base, document: form.documento.replace(/\D/g, "") },
       });
       if (error) {
