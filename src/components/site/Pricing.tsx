@@ -127,7 +127,7 @@ function PlanCard({
             <span className="text-3xl font-extrabold tracking-tight text-text">{formatCents(perMonth)}</span>
             <span className="text-sm text-text-muted">/mês</span>
           </div>
-          <p className="mt-1 text-sm text-text-muted">{billing === "anual" && plan.price_year_cents !== null ? `${formatCents(plan.price_year_cents)} cobrados por ano` : "Cobrança mensal, sem fidelidade"}</p>
+          <p className="mt-1 text-sm text-text-muted">{billing === "anual" && plan.price_year_cents !== null ? `Equivale a ${formatCents(plan.price_year_cents)}/ano · em até 3x no cartão` : "Cobrança mensal, sem fidelidade"}</p>
         </div>
       )}
       <ul className="mt-6 flex-1 space-y-3 text-left">
