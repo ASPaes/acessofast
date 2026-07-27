@@ -66,6 +66,24 @@ function monthlyCents(plan: Plan, billing: BillingCycle): number | null {
   return plan.price_month_cents;
 }
 
+/**
+ * Desconto do anual sobre o mensal, em %. Usa o MENOR desconto entre os planos pagos
+ * para não prometer no toggle mais do que algum plano entrega. null quando não há desconto.
+ */
+function annualDiscountPercent(plans: Plan[]): number | null {
+  const rates: number[] = [];
+  for (const plan of plans) {
+    const month = plan.price_month_cents;
+    const year = plan.price_year_cents;
+    if (plan.is_custom || month === null || year === null || month <= 0) continue;
+    const rate = 1 - year / 12 / month;
+    if (rate > 0) rates.push(rate);
+  }
+  if (rates.length === 0) return null;
+  const percent = Math.round(Math.min(...rates) * 100);
+  return percent > 0 ? percent : null;
+}
+
 function usersLabel(plan: Plan) {
   if (plan.max_users === null) return "Usuários sob medida";
   if (plan.max_users === 1) return "1 usuário";
@@ -202,6 +220,7 @@ export function Pricing({ onSelectPlan }: PricingProps) {
     view === "individual" ? p.code === "individual" : p.code !== "individual",
   );
   const hasPlans = visiblePlans.length > 0;
+  const annualDiscount = annualDiscountPercent(plans ?? []);
 
   return (
     <section id="preco" className="bg-surface py-28">
@@ -212,7 +231,14 @@ export function Pricing({ onSelectPlan }: PricingProps) {
           <p className="mx-auto mt-4 max-w-xl text-lg text-text-muted">Preço fechado, sem excedente e sem reajuste surpresa.</p>
           <div className="mt-8 inline-flex items-center gap-1 rounded-full border border-border bg-bg p-1">
             {VIEWS.map((v) => (
-              <button key={v.value} type="button" onClick={() => setView(v.value)} className={`rounded-full px-6 py-2 text-sm font-medium transition-colors ${view === v.value ? "bg-primary text-primary-foreground" : "text-text-muted hover:text-text"}`}>{v.label}</button>
+              <button key={v.value} type="button" onClick={() => setView(v.value)} className={`inline-flex items-center gap-2 rounded-full px-6 py-2 text-sm font-medium transition-colors ${view === v.value ? "bg-primary text-primary-foreground" : "text-text-muted hover:text-text"}`}>
+                {v.label}
+                {v.value === "anual" && annualDiscount !== null && (
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${view === v.value ? "bg-primary-foreground/20 text-primary-foreground" : "bg-success/15 text-success"}`}>
+                    {annualDiscount}% de desconto
+                  </span>
+                )}
+              </button>
             ))}
           </div>
         </div>
