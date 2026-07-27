@@ -233,8 +233,9 @@ export function Pricing({ onSelectPlan }: PricingProps) {
             {VIEWS.map((v) => (
               <button key={v.value} type="button" onClick={() => setView(v.value)} className={`inline-flex items-center gap-2 rounded-full px-6 py-2 text-sm font-medium transition-colors ${view === v.value ? "bg-primary text-primary-foreground" : "text-text-muted hover:text-text"}`}>
                 {v.label}
-                {v.value === "anual" && annualDiscount !== null && (
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${view === v.value ? "bg-primary-foreground/20 text-primary-foreground" : "bg-success/15 text-success"}`}>
+                {/* Só como isca: com o Anual já selecionado o selo vira ruído dentro do botão ativo. */}
+                {v.value === "anual" && view !== "anual" && annualDiscount !== null && (
+                  <span className="rounded-full bg-success/15 px-2 py-0.5 text-xs font-semibold text-success">
                     {annualDiscount}% de desconto
                   </span>
                 )}
