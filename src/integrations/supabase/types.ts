@@ -111,6 +111,7 @@ export type Database = {
       }
       asaas_events: {
         Row: {
+          environment: string
           event_id: string
           event_type: string
           external_reference: string | null
@@ -124,6 +125,7 @@ export type Database = {
           subscription_id: string | null
         }
         Insert: {
+          environment?: string
           event_id: string
           event_type: string
           external_reference?: string | null
@@ -137,6 +139,7 @@ export type Database = {
           subscription_id?: string | null
         }
         Update: {
+          environment?: string
           event_id?: string
           event_type?: string
           external_reference?: string | null
@@ -151,6 +154,89 @@ export type Database = {
         }
         Relationships: []
       }
+      atendimentos: {
+        Row: {
+          address_book_id: string | null
+          charged: boolean
+          connection_log_id: string | null
+          created_at: string
+          ended_at: string | null
+          hard_cap_at: string | null
+          id: string
+          origin: string
+          peer_ip: unknown
+          rustdesk_id: string
+          source: Database["public"]["Enums"]["atendimento_source"]
+          started_at: string
+          technician_id: string | null
+          tenant_id: string
+          window_expires_at: string
+        }
+        Insert: {
+          address_book_id?: string | null
+          charged?: boolean
+          connection_log_id?: string | null
+          created_at?: string
+          ended_at?: string | null
+          hard_cap_at?: string | null
+          id?: string
+          origin?: string
+          peer_ip?: unknown
+          rustdesk_id: string
+          source: Database["public"]["Enums"]["atendimento_source"]
+          started_at?: string
+          technician_id?: string | null
+          tenant_id: string
+          window_expires_at: string
+        }
+        Update: {
+          address_book_id?: string | null
+          charged?: boolean
+          connection_log_id?: string | null
+          created_at?: string
+          ended_at?: string | null
+          hard_cap_at?: string | null
+          id?: string
+          origin?: string
+          peer_ip?: unknown
+          rustdesk_id?: string
+          source?: Database["public"]["Enums"]["atendimento_source"]
+          started_at?: string
+          technician_id?: string | null
+          tenant_id?: string
+          window_expires_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "atendimentos_address_book_id_fkey"
+            columns: ["address_book_id"]
+            isOneToOne: false
+            referencedRelation: "address_book"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atendimentos_connection_log_id_fkey"
+            columns: ["connection_log_id"]
+            isOneToOne: false
+            referencedRelation: "connection_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atendimentos_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "atendimentos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           created_at: string
@@ -160,6 +246,7 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          phone: string | null
           tenant_id: string
           updated_at: string
         }
@@ -171,6 +258,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          phone?: string | null
           tenant_id: string
           updated_at?: string
         }
@@ -182,6 +270,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          phone?: string | null
           tenant_id?: string
           updated_at?: string
         }
@@ -261,6 +350,146 @@ export type Database = {
           },
           {
             foreignKeyName: "connection_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_ledger: {
+        Row: {
+          asaas_event_id: string | null
+          atendimento_id: string | null
+          created_at: string
+          created_by: string | null
+          credits: number
+          entry_type: Database["public"]["Enums"]["credit_entry_type"]
+          id: string
+          note: string | null
+          package_code: string | null
+          tenant_id: string
+        }
+        Insert: {
+          asaas_event_id?: string | null
+          atendimento_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          credits: number
+          entry_type: Database["public"]["Enums"]["credit_entry_type"]
+          id?: string
+          note?: string | null
+          package_code?: string | null
+          tenant_id: string
+        }
+        Update: {
+          asaas_event_id?: string | null
+          atendimento_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          credits?: number
+          entry_type?: Database["public"]["Enums"]["credit_entry_type"]
+          id?: string
+          note?: string | null
+          package_code?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_ledger_asaas_event_id_fkey"
+            columns: ["asaas_event_id"]
+            isOneToOne: false
+            referencedRelation: "asaas_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_ledger_atendimento_fk"
+            columns: ["atendimento_id"]
+            isOneToOne: false
+            referencedRelation: "atendimentos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_ledger_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_ledger_package_code_fkey"
+            columns: ["package_code"]
+            isOneToOne: false
+            referencedRelation: "credit_packages"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "credit_ledger_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_packages: {
+        Row: {
+          code: string
+          created_at: string
+          credits: number
+          id: string
+          is_active: boolean
+          price_cents: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          credits: number
+          id?: string
+          is_active?: boolean
+          price_cents: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          credits?: number
+          id?: string
+          is_active?: boolean
+          price_cents?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      daily_access: {
+        Row: {
+          access_date: string
+          cap: number
+          tenant_id: string
+          updated_at: string
+          used: number
+        }
+        Insert: {
+          access_date: string
+          cap?: number
+          tenant_id: string
+          updated_at?: string
+          used?: number
+        }
+        Update: {
+          access_date?: string
+          cap?: number
+          tenant_id?: string
+          updated_at?: string
+          used?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_access_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -476,6 +705,59 @@ export type Database = {
         }
         Relationships: []
       }
+      join_requests: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decided_role: Database["public"]["Enums"]["user_role"] | null
+          email: string
+          full_name: string | null
+          id: string
+          status: Database["public"]["Enums"]["join_request_status"]
+          tenant_id: string
+          tenant_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decided_role?: Database["public"]["Enums"]["user_role"] | null
+          email: string
+          full_name?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["join_request_status"]
+          tenant_id: string
+          tenant_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decided_role?: Database["public"]["Enums"]["user_role"] | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["join_request_status"]
+          tenant_id?: string
+          tenant_name?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "join_requests_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           company: string | null
@@ -570,6 +852,7 @@ export type Database = {
           full_name: string | null
           id: string
           is_active: boolean
+          onboarding_done_at: string | null
           role: Database["public"]["Enums"]["user_role"]
           tenant_id: string | null
           updated_at: string
@@ -580,6 +863,7 @@ export type Database = {
           full_name?: string | null
           id: string
           is_active?: boolean
+          onboarding_done_at?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           tenant_id?: string | null
           updated_at?: string
@@ -590,6 +874,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_active?: boolean
+          onboarding_done_at?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           tenant_id?: string | null
           updated_at?: string
@@ -604,6 +889,132 @@ export type Database = {
           },
         ]
       }
+      promo_code_redemptions: {
+        Row: {
+          admin_email: string | null
+          applied_discount_months: number | null
+          applied_discount_percent: number | null
+          applied_extra_trial_days: number
+          code: string
+          doc_hash: string | null
+          id: string
+          promo_code_id: string
+          redeemed_at: string
+          signup_intent_id: string | null
+          tenant_id: string | null
+        }
+        Insert: {
+          admin_email?: string | null
+          applied_discount_months?: number | null
+          applied_discount_percent?: number | null
+          applied_extra_trial_days?: number
+          code: string
+          doc_hash?: string | null
+          id?: string
+          promo_code_id: string
+          redeemed_at?: string
+          signup_intent_id?: string | null
+          tenant_id?: string | null
+        }
+        Update: {
+          admin_email?: string | null
+          applied_discount_months?: number | null
+          applied_discount_percent?: number | null
+          applied_extra_trial_days?: number
+          code?: string
+          doc_hash?: string | null
+          id?: string
+          promo_code_id?: string
+          redeemed_at?: string
+          signup_intent_id?: string | null
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_code_redemptions_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_code_redemptions_signup_intent_id_fkey"
+            columns: ["signup_intent_id"]
+            isOneToOne: false
+            referencedRelation: "signup_intents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_code_redemptions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promo_codes: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          discount_months: number | null
+          discount_percent: number | null
+          extra_trial_days: number
+          id: string
+          is_active: boolean
+          max_redemptions: number | null
+          plan_codes: string[] | null
+          redemptions_count: number
+          updated_at: string
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_months?: number | null
+          discount_percent?: number | null
+          extra_trial_days?: number
+          id?: string
+          is_active?: boolean
+          max_redemptions?: number | null
+          plan_codes?: string[] | null
+          redemptions_count?: number
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_months?: number | null
+          discount_percent?: number | null
+          extra_trial_days?: number
+          id?: string
+          is_active?: boolean
+          max_redemptions?: number | null
+          plan_codes?: string[] | null
+          redemptions_count?: number
+          updated_at?: string
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_codes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       signup_intents: {
         Row: {
           admin_email: string
@@ -613,10 +1024,11 @@ export type Database = {
           asaas_payment_id: string | null
           asaas_subscription_id: string | null
           billing_cycle: string
-          cnpj: string
+          cnpj: string | null
           company_name: string
           consent: boolean
           created_at: string
+          environment: string
           failure_reason: string | null
           id: string
           phone: string | null
@@ -634,10 +1046,11 @@ export type Database = {
           asaas_payment_id?: string | null
           asaas_subscription_id?: string | null
           billing_cycle: string
-          cnpj: string
+          cnpj?: string | null
           company_name: string
           consent?: boolean
           created_at?: string
+          environment?: string
           failure_reason?: string | null
           id?: string
           phone?: string | null
@@ -655,10 +1068,11 @@ export type Database = {
           asaas_payment_id?: string | null
           asaas_subscription_id?: string | null
           billing_cycle?: string
-          cnpj?: string
+          cnpj?: string | null
           company_name?: string
           consent?: boolean
           created_at?: string
+          environment?: string
           failure_reason?: string | null
           id?: string
           phone?: string | null
@@ -780,13 +1194,22 @@ export type Database = {
           asaas_customer_id: string | null
           asaas_subscription_id: string | null
           billing_email: string | null
+          billing_exempt: boolean
+          billing_exempt_reason: string | null
+          billing_exempt_until: string | null
+          billing_invoice_url: string | null
+          billing_mode: Database["public"]["Enums"]["billing_mode"]
+          billing_status: string
           cnpj: string | null
           created_at: string
           id: string
           is_active: boolean
+          is_trial: boolean
           max_concurrent_per_tech: number | null
           name: string
+          past_due_since: string | null
           plan_code: string | null
+          plan_expires_at: string | null
           relay_quota_gb: number
           seat_limit: number
           slug: string | null
@@ -796,13 +1219,22 @@ export type Database = {
           asaas_customer_id?: string | null
           asaas_subscription_id?: string | null
           billing_email?: string | null
+          billing_exempt?: boolean
+          billing_exempt_reason?: string | null
+          billing_exempt_until?: string | null
+          billing_invoice_url?: string | null
+          billing_mode?: Database["public"]["Enums"]["billing_mode"]
+          billing_status?: string
           cnpj?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
+          is_trial?: boolean
           max_concurrent_per_tech?: number | null
           name: string
+          past_due_since?: string | null
           plan_code?: string | null
+          plan_expires_at?: string | null
           relay_quota_gb?: number
           seat_limit?: number
           slug?: string | null
@@ -812,13 +1244,22 @@ export type Database = {
           asaas_customer_id?: string | null
           asaas_subscription_id?: string | null
           billing_email?: string | null
+          billing_exempt?: boolean
+          billing_exempt_reason?: string | null
+          billing_exempt_until?: string | null
+          billing_invoice_url?: string | null
+          billing_mode?: Database["public"]["Enums"]["billing_mode"]
+          billing_status?: string
           cnpj?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
+          is_trial?: boolean
           max_concurrent_per_tech?: number | null
           name?: string
+          past_due_since?: string | null
           plan_code?: string | null
+          plan_expires_at?: string | null
           relay_quota_gb?: number
           seat_limit?: number
           slug?: string | null
@@ -831,6 +1272,185 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "plans"
             referencedColumns: ["code"]
+          },
+        ]
+      }
+      trials: {
+        Row: {
+          cnpj: string
+          converted_at: string | null
+          created_at: string
+          ends_at: string
+          has_card: boolean
+          id: string
+          plan_code: string
+          starts_at: string
+          state: Database["public"]["Enums"]["trial_state"]
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          cnpj: string
+          converted_at?: string | null
+          created_at?: string
+          ends_at: string
+          has_card?: boolean
+          id?: string
+          plan_code: string
+          starts_at?: string
+          state?: Database["public"]["Enums"]["trial_state"]
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          cnpj?: string
+          converted_at?: string | null
+          created_at?: string
+          ends_at?: string
+          has_card?: boolean
+          id?: string
+          plan_code?: string
+          starts_at?: string
+          state?: Database["public"]["Enums"]["trial_state"]
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trials_plan_code_fkey"
+            columns: ["plan_code"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "trials_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voucher_requests: {
+        Row: {
+          company: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          id: string
+          phone: string | null
+          plan_code: string | null
+          reason: string
+          status: Database["public"]["Enums"]["voucher_request_status"]
+          tenant_id: string
+        }
+        Insert: {
+          company: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          phone?: string | null
+          plan_code?: string | null
+          reason: string
+          status?: Database["public"]["Enums"]["voucher_request_status"]
+          tenant_id: string
+        }
+        Update: {
+          company?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          phone?: string | null
+          plan_code?: string | null
+          reason?: string
+          status?: Database["public"]["Enums"]["voucher_request_status"]
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voucher_requests_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "voucher_requests_plan_code_fkey"
+            columns: ["plan_code"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "voucher_requests_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vouchers: {
+        Row: {
+          applied_at: string | null
+          applied_by: string | null
+          applied_to_tenant: string | null
+          cnpj: string
+          code: string
+          created_at: string
+          created_by: string | null
+          days: number
+          id: string
+          state: Database["public"]["Enums"]["voucher_state"]
+        }
+        Insert: {
+          applied_at?: string | null
+          applied_by?: string | null
+          applied_to_tenant?: string | null
+          cnpj: string
+          code: string
+          created_at?: string
+          created_by?: string | null
+          days: number
+          id?: string
+          state?: Database["public"]["Enums"]["voucher_state"]
+        }
+        Update: {
+          applied_at?: string | null
+          applied_by?: string | null
+          applied_to_tenant?: string | null
+          cnpj?: string
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          days?: number
+          id?: string
+          state?: Database["public"]["Enums"]["voucher_state"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vouchers_applied_by_fkey"
+            columns: ["applied_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vouchers_applied_to_tenant_fkey"
+            columns: ["applied_to_tenant"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vouchers_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1022,7 +1642,16 @@ export type Database = {
       }
     }
     Functions: {
+      apply_paid_plan: { Args: { p_intent_id: string }; Returns: string }
       approve_device: { Args: { p_device_id: string }; Returns: undefined }
+      approve_join_request: {
+        Args: {
+          p_actor: string
+          p_request_id: string
+          p_role: Database["public"]["Enums"]["user_role"]
+        }
+        Returns: undefined
+      }
       assign_member: {
         Args: {
           p_role: Database["public"]["Enums"]["user_role"]
@@ -1046,6 +1675,37 @@ export type Database = {
           seat_limit: number
         }[]
       }
+      attach_trial_tenant: {
+        Args: { p_doc_hash: string; p_tenant_id: string }
+        Returns: boolean
+      }
+      auto_adopt_direct: {
+        Args: {
+          p_agent_token_hash: string
+          p_controller_rustdesk_id: string
+          p_rustdesk_id: string
+        }
+        Returns: {
+          adopted: boolean
+          device_id: string
+          reason: string
+          tenant_id: string
+        }[]
+      }
+      billing_eligibility: {
+        Args: { p_actor: string; p_device_id: string }
+        Returns: {
+          active_sessions: number
+          auto_source: string
+          billing_status: string
+          blocked_reason: string
+          credit_balance: number
+          free_remaining: number
+          is_reconnect: boolean
+          mode: string
+          needs_choice: boolean
+        }[]
+      }
       claim_poll: {
         Args: { p_nonce_hash: string; p_rustdesk_id: string }
         Returns: string
@@ -1060,12 +1720,89 @@ export type Database = {
         }
         Returns: string
       }
+      claim_trial_document: {
+        Args: { p_doc_hash: string; p_doc_type: string; p_tenant_id?: string }
+        Returns: boolean
+      }
       close_stale_sessions: { Args: never; Returns: number }
+      create_access_grant: {
+        Args: {
+          p_actor: string
+          p_device_id: string
+          p_source?: string
+          p_technician_email?: string
+          p_technician_ip?: string
+        }
+        Returns: {
+          active_before: number
+          atendimento_id: string
+          charged: boolean
+          effective_limit: number
+          grant_id: string
+          rustdesk_id: string
+          source: string
+          tenant_id: string
+        }[]
+      }
       create_enrollment_secret: {
         Args: { p_label?: string; p_tenant_id: string }
         Returns: {
           plaintext: string
           secret_id: string
+        }[]
+      }
+      create_join_request: {
+        Args: {
+          p_email?: string
+          p_full_name?: string
+          p_tenant_id: string
+          p_user_id: string
+        }
+        Returns: string
+      }
+      create_promo_code: {
+        Args: {
+          p_code: string
+          p_description?: string
+          p_discount_months?: number
+          p_discount_percent?: number
+          p_extra_trial_days?: number
+          p_max_redemptions?: number
+          p_plan_codes?: string[]
+          p_valid_until?: string
+        }
+        Returns: {
+          code: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          discount_months: number | null
+          discount_percent: number | null
+          extra_trial_days: number
+          id: string
+          is_active: boolean
+          max_redemptions: number | null
+          plan_codes: string[] | null
+          redemptions_count: number
+          updated_at: string
+          valid_from: string
+          valid_until: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "promo_codes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      find_tenant_by_document: {
+        Args: { p_cnpj?: string; p_doc_hash: string }
+        Returns: {
+          active_users: number
+          doc_reservado: boolean
+          seat_limit: number
+          tenant_id: string
+          tenant_name: string
         }[]
       }
       get_device_secret: {
@@ -1076,14 +1813,53 @@ export type Database = {
           key_version: number
         }[]
       }
-      log_connection_attempt: {
-        Args: { p_address_book_id: string }
+      meter_external_session: {
+        Args: {
+          p_connection_log_id: string
+          p_peer_ip?: string
+          p_rustdesk_id: string
+        }
+        Returns: {
+          atendimento_id: string
+          blocked: boolean
+          hard_cap_at: string
+          reason: string
+          source: string
+        }[]
+      }
+      promo_code_attach_tenant: {
+        Args: { p_redemption_id: string; p_tenant_id: string }
+        Returns: undefined
+      }
+      promo_code_preview: {
+        Args: { p_code: string; p_plan_code?: string }
+        Returns: {
+          code: string
+          description: string
+          discount_months: number
+          discount_percent: number
+          extra_trial_days: number
+          ok: boolean
+          reason: string
+        }[]
+      }
+      provision_from_intent: {
+        Args: { p_admin_user_id: string; p_intent_id: string }
         Returns: string
       }
       provision_tenant: {
         Args: { p_admin_user_id: string; p_name: string; p_seat_limit?: number }
         Returns: string
       }
+      provision_trial_from_intent: {
+        Args: {
+          p_admin_user_id: string
+          p_intent_id: string
+          p_trial_days?: number
+        }
+        Returns: string
+      }
+      purge_old_join_requests: { Args: never; Returns: number }
       redeem_claim: {
         Args: {
           p_actor: string
@@ -1112,7 +1888,35 @@ export type Database = {
           r_tenant_id: string
         }[]
       }
+      redeem_promo_code: {
+        Args: {
+          p_admin_email?: string
+          p_code: string
+          p_doc_hash?: string
+          p_plan_code?: string
+          p_signup_intent_id?: string
+        }
+        Returns: {
+          discount_months: number
+          discount_percent: number
+          extra_trial_days: number
+          ok: boolean
+          reason: string
+          redemption_id: string
+        }[]
+      }
       reject_device: { Args: { p_device_id: string }; Returns: undefined }
+      reject_join_request: {
+        Args: { p_actor: string; p_request_id: string }
+        Returns: undefined
+      }
+      release_promo_code: {
+        Args: { p_redemption_id: string }
+        Returns: undefined
+      }
+      release_trial_document: { Args: { p_doc_hash: string }; Returns: boolean }
+      reopen_join_request: { Args: { p_user_id: string }; Returns: string }
+      revoke_access_grant: { Args: { p_grant_id: string }; Returns: undefined }
       revoke_enrollment_secret: {
         Args: { p_secret_id: string }
         Returns: undefined
@@ -1135,9 +1939,18 @@ export type Database = {
         }
         Returns: undefined
       }
+      set_promo_code_active: {
+        Args: { p_active: boolean; p_id: string }
+        Returns: undefined
+      }
       set_user_active: {
         Args: { p_active: boolean; p_user_id: string }
         Returns: undefined
+      }
+      suspend_expired_plans: { Args: never; Returns: number }
+      suspend_overdue_tenants: {
+        Args: { p_grace_days?: number }
+        Returns: number
       }
       tenant_has_feature: {
         Args: { p_feature_key: string; p_tenant_id: string }
@@ -1170,11 +1983,24 @@ export type Database = {
       }
     }
     Enums: {
+      atendimento_source: "free" | "credit" | "plan"
+      billing_mode: "free" | "credits" | "plan"
+      billing_status:
+        | "active"
+        | "trialing"
+        | "dunning"
+        | "blocked_trial"
+        | "blocked_billing"
+      credit_entry_type: "purchase" | "consume" | "adjust" | "refund" | "expire"
       document_type: "cnpj" | "cpf"
       enrollment_status: "pending" | "approved" | "rejected"
+      join_request_status: "pending" | "approved" | "rejected"
       lead_status: "novo" | "em_contato" | "qualificado" | "ganho" | "perdido"
       session_status: "active" | "ended" | "failed"
+      trial_state: "trialing" | "converted" | "expired" | "blocked"
       user_role: "super_admin" | "admin" | "head" | "tech"
+      voucher_request_status: "pending" | "approved" | "rejected"
+      voucher_state: "issued" | "applied" | "void"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1302,11 +2128,25 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      atendimento_source: ["free", "credit", "plan"],
+      billing_mode: ["free", "credits", "plan"],
+      billing_status: [
+        "active",
+        "trialing",
+        "dunning",
+        "blocked_trial",
+        "blocked_billing",
+      ],
+      credit_entry_type: ["purchase", "consume", "adjust", "refund", "expire"],
       document_type: ["cnpj", "cpf"],
       enrollment_status: ["pending", "approved", "rejected"],
+      join_request_status: ["pending", "approved", "rejected"],
       lead_status: ["novo", "em_contato", "qualificado", "ganho", "perdido"],
       session_status: ["active", "ended", "failed"],
+      trial_state: ["trialing", "converted", "expired", "blocked"],
       user_role: ["super_admin", "admin", "head", "tech"],
+      voucher_request_status: ["pending", "approved", "rejected"],
+      voucher_state: ["issued", "applied", "void"],
     },
   },
 } as const
