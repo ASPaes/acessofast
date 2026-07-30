@@ -1,5 +1,14 @@
-// AcessoFast — create-checkout-prod (v3)
+// AcessoFast — create-checkout-prod (v4)
 // PRODUCAO. verify_jwt = FALSE: chamado pelo site comercial (visitante anonimo).
+//
+// v4 (30/07/2026) — o resgate passa a levar doc_hash:
+//   O assinar nao pedia CPF/CNPJ (quem coleta e o checkout do Asaas), entao o
+//   resgate ia com doc_hash null e a mesma empresa podia queimar o mesmo voucher
+//   varias vezes — so o teto global (max_redemptions) segurava. Agora, QUANDO ha
+//   voucher, o documento e obrigatorio e vira o mesmo HMAC do start-trial-prod,
+//   fechando o unique (promo_code_id, doc_hash): um voucher de campanha pode
+//   valer 20 usos, mas nao 20 usos da mesma empresa.
+//   Sem voucher nada muda: o campo nem aparece e o funil pago segue igual.
 //
 // v3 (30/07/2026) — voucher de parceiro (promo_codes):
 //   `promo_code` opcional no body. Aplica o desconto percentual do voucher
@@ -21,11 +30,6 @@
 //   (o resgate precisa do intent.id). Qualquer falha posterior devolve o uso com
 //   release_promo_code, que por cascata tambem apaga a janela.
 //
-//   NOTA: o fluxo de assinatura nao coleta CPF/CNPJ — quem coleta e o checkout
-//   do Asaas. Entao o resgate vai com doc_hash null e a trava "1 por documento"
-//   nao vale aqui; o teto continua sendo max_redemptions. No trial, que coleta o
-//   documento, a trava por documento vale normalmente.
-//
 // v2 (jul/2026) — MAX_INSTALLMENTS 12 -> 3 (anual pago a vista para a
 //   AcessoFast; cliente parcela no cartao em ate 3x; plano vale 12 meses).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -36,6 +40,9 @@ const ASAAS_CHECKOUT_BASE = "https://asaas.com/checkoutSession/show?id=";
 const ASAAS_KEY = Deno.env.get("ASAAS_API_KEY_PROD")!;
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
 const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+// Mesma chave do start-trial-prod de proposito: o doc_hash tem que ser o mesmo
+// nos dois fluxos, senao a mesma empresa apareceria como duas.
+const HMAC_KEY = Deno.env.get("TRIAL_DOC_HMAC_KEY")!;
 
 const SITE = "https://acessofast.com.br";
 const URL_SUCCESS = `${SITE}/obrigado`;
@@ -78,6 +85,39 @@ function clientIp(req) {
   return (req.headers.get("x-real-ip") ?? "").trim();
 }
 
+// (v4) Validacao e HMAC do documento — copia fiel do start-trial-prod para que
+// o mesmo CPF/CNPJ produza o mesmo doc_hash nos dois fluxos.
+function cpfValido(c) {
+  if (c.length !== 11 || /^(\d)\1{10}$/.test(c)) return false;
+  for (const peso of [10, 11]) {
+    let s = 0;
+    for (let i = 0; i < peso - 1; i++) s += Number(c[i]) * (peso - i);
+    let d = (s * 10) % 11;
+    if (d === 10) d = 0;
+    if (d !== Number(c[peso - 1])) return false;
+  }
+  return true;
+}
+function cnpjValido(c) {
+  if (c.length !== 14 || /^(\d)\1{13}$/.test(c)) return false;
+  const calc = (base, pesos) => {
+    const s = base.split("").reduce((a, d, i) => a + Number(d) * pesos[i], 0);
+    const r = s % 11;
+    return r < 2 ? 0 : 11 - r;
+  };
+  const d1 = calc(c.slice(0, 12), [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+  const d2 = calc(c.slice(0, 13), [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
+  return d1 === Number(c[12]) && d2 === Number(c[13]);
+}
+async function hmacDoc(doc) {
+  const key = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(HMAC_KEY),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(doc));
+  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
 // promo_code_preview / redeem_promo_code retornam table(...): sempre 1 linha.
 const umaLinha = (data) => (Array.isArray(data) ? data[0] : data);
 
@@ -94,6 +134,7 @@ Deno.serve(async (req) => {
   const billing_cycle = String(b.billing_cycle ?? "monthly").trim().toLowerCase();
   const consent = b.consent === true;
   const promo_code = String(b.promo_code ?? "").trim().toUpperCase().slice(0, 32);
+  const doc = String(b.document ?? "").replace(/\D/g, "");
 
   if (!company_name) return j({ error: "company_name_required" }, 400);
   if (!EMAIL_RE.test(admin_email)) return j({ error: "invalid_email" }, 400);
@@ -102,6 +143,17 @@ Deno.serve(async (req) => {
     return j({ error: "invalid_billing_cycle" }, 400);
   if (!SELF_SERVE_PLANS.includes(plan_code))
     return j({ error: "plan_not_self_serve", detail: "Enterprise e venda assistida." }, 400);
+
+  // (v4) So exigimos documento quando ha voucher. Sem voucher o funil pago
+  // continua sem pedir nada a mais — quem coleta e o checkout do Asaas.
+  let doc_type = null;
+  if (promo_code) {
+    if (!HMAC_KEY) { console.error("TRIAL_DOC_HMAC_KEY ausente"); return j({ error: "server_misconfig" }, 500); }
+    doc_type = doc.length === 11 ? "cpf" : doc.length === 14 ? "cnpj" : null;
+    if (!doc_type) return j({ error: "document_required_for_promo" }, 400);
+    if (doc_type === "cpf" && !cpfValido(doc)) return j({ error: "invalid_document" }, 400);
+    if (doc_type === "cnpj" && !cnpjValido(doc)) return j({ error: "invalid_document" }, 400);
+  }
 
   const db = createClient(SB_URL, SB_KEY, { auth: { persistSession: false } });
 
@@ -157,6 +209,9 @@ Deno.serve(async (req) => {
     .insert({
       company_name, admin_email, phone: phone || null, consent,
       plan_code, billing_cycle, amount_cents,
+      // Mesma regra do start-trial-prod: o CNPJ (identificador de empresa) e
+      // gravado; o CPF nunca — dele so existe o HMAC.
+      cnpj: doc_type === "cnpj" ? doc : null,
       status: "pending", environment: ENV,
     })
     .select("id").single();
@@ -176,8 +231,11 @@ Deno.serve(async (req) => {
   };
 
   if (promo_code) {
+    // (v4) O doc_hash faz o unique (promo_code_id, doc_hash) valer aqui tambem:
+    // a segunda tentativa da mesma empresa volta com reason 'already_used'.
+    const doc_hash = await hmacDoc(doc);
     const { data: rd, error: rdErr } = await db.rpc("redeem_promo_code", {
-      p_code: promo_code, p_plan_code: plan_code, p_doc_hash: null,
+      p_code: promo_code, p_plan_code: plan_code, p_doc_hash: doc_hash,
       p_signup_intent_id: intent.id, p_admin_email: admin_email,
     });
     if (rdErr) {
