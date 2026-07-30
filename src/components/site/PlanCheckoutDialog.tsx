@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, TicketPercent, AlertCircle } from "lucide-react";
 
 import {
   Dialog,
@@ -10,6 +10,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  checkPromoCode,
+  promoBenefitLabel,
+  promoReasonMessage,
+  trialDaysWith,
+  DESCONTO_NO_CHECKOUT_ATIVO,
+  TRIAL_DAYS,
+  type PromoCodeInfo,
+} from "@/lib/promo-code";
 
 export type DialogAction = "subscribe" | "trial" | "free";
 
@@ -57,27 +66,37 @@ const ERROR_MESSAGES: Record<string, string> = {
 
 /** O corpo `{ error: "codigo" }` de uma resposta != 2xx chega em error.context (Response). */
 async function messageFor(error: unknown): Promise<string> {
-  let code = "";
+  let body: { error?: string; reason?: string } | undefined;
   try {
-    const context = (error as { context?: { json?: () => Promise<{ error?: string }> } })?.context;
-    code = (await context?.json?.())?.error ?? "";
+    const context = (
+      error as { context?: { json?: () => Promise<{ error?: string; reason?: string }> } }
+    )?.context;
+    body = await context?.json?.();
   } catch {
     // corpo ausente, não-JSON ou já consumido: cai na mensagem genérica.
   }
-  return ERROR_MESSAGES[code] ?? GENERIC_ERROR;
+  // O voucher pode ter caducado entre a validação na digitação e o envio.
+  if (body?.error === "promo_code_invalid") return promoReasonMessage(body.reason);
+  return ERROR_MESSAGES[body?.error ?? ""] ?? GENERIC_ERROR;
 }
 
-const TITLES: Record<DialogAction, (planName: string) => string> = {
+const TITLES: Record<DialogAction, (planName: string, trialDays: number) => string> = {
   subscribe: (planName) => `Assinar ${planName}`,
-  trial: (planName) => `Testar ${planName} por 7 dias`,
+  trial: (planName, trialDays) => `Testar ${planName} por ${trialDays} dias`,
   free: () => "Criar sua conta grátis",
 };
 
-const DESCRIPTIONS: Record<DialogAction, string> = {
-  subscribe: "Preencha os dados para ir ao pagamento seguro.",
-  trial: "7 dias grátis. Sem cartão de crédito.",
-  free: "Comece agora, sem custo.",
+const DESCRIPTIONS: Record<DialogAction, (trialDays: number) => string> = {
+  subscribe: () => "Preencha os dados para ir ao pagamento seguro.",
+  trial: (trialDays) => `${trialDays} dias grátis. Sem cartão de crédito.`,
+  free: () => "Comece agora, sem custo.",
 };
+
+type PromoState =
+  | { status: "idle" }
+  | { status: "checking" }
+  | { status: "valid"; info: PromoCodeInfo }
+  | { status: "invalid"; message: string };
 
 export function PlanCheckoutDialog({
   open,
@@ -90,6 +109,8 @@ export function PlanCheckoutDialog({
   const [form, setForm] = useState<Form>(empty);
   const [errors, setErrors] = useState<Partial<Record<keyof Form, string>>>({});
   const [status, setStatus] = useState<"idle" | "loading" | "success">("idle");
+  const [promo, setPromo] = useState("");
+  const [promoState, setPromoState] = useState<PromoState>({ status: "idle" });
   // O pai zera o plano ao fechar; guardar o último mantém o título estável na animação de saída.
   const [plan, setPlan] = useState({ planCode, planName, action, billingCycle });
 
@@ -99,9 +120,50 @@ export function PlanCheckoutDialog({
     setForm(empty);
     setErrors({});
     setStatus("idle");
+    setPromo("");
+    setPromoState({ status: "idle" });
   }, [open, planCode, planName, action, billingCycle]);
 
   const needsDocument = plan.action !== "subscribe";
+
+  // O desconto só existe no fluxo pago; os dias extras, só no teste. Enquanto a
+  // create-checkout-prod não aplicar o desconto, o campo não aparece no assinar.
+  const showsVoucher =
+    plan.action === "trial" || (plan.action === "subscribe" && DESCONTO_NO_CHECKOUT_ATIVO);
+
+  const promoInfo = promoState.status === "valid" ? promoState.info : null;
+  const trialDays = plan.action === "trial" ? trialDaysWith(promoInfo) : TRIAL_DAYS;
+
+  // Consulta com atraso: o visitante ainda está digitando o código.
+  useEffect(() => {
+    if (!showsVoucher) return;
+    const code = promo.trim().toUpperCase();
+    if (code.length === 0) {
+      setPromoState({ status: "idle" });
+      return;
+    }
+    // Curto demais para existir: avisa na hora em vez de deixar "idle", que o
+    // envio trataria como campo vazio e descartaria o que a pessoa digitou.
+    if (code.length < 3) {
+      setPromoState({ status: "invalid", message: promoReasonMessage("not_found") });
+      return;
+    }
+    setPromoState({ status: "checking" });
+    let cancelado = false;
+    const timer = setTimeout(async () => {
+      const resultado = await checkPromoCode(code, plan.planCode);
+      if (cancelado) return;
+      setPromoState(
+        resultado.status === "valid"
+          ? { status: "valid", info: resultado.info }
+          : { status: "invalid", message: resultado.message },
+      );
+    }, 500);
+    return () => {
+      cancelado = true;
+      clearTimeout(timer);
+    };
+  }, [promo, plan.planCode, showsVoucher]);
 
   const set = <K extends keyof Form>(k: K, v: Form[K]) => {
     setForm((p) => ({ ...p, [k]: v }));
@@ -121,6 +183,9 @@ export function PlanCheckoutDialog({
     }
     if (!form.consentimento_lgpd) e.consentimento_lgpd = "É necessário aceitar.";
     setErrors(e);
+    // Código digitado mas ainda não confirmado (recusado ou em verificação):
+    // barra o envio para não descartar o voucher em silêncio.
+    if (showsVoucher && promo.trim() && promoState.status !== "valid") return false;
     return Object.keys(e).length === 0;
   };
 
@@ -128,12 +193,15 @@ export function PlanCheckoutDialog({
     if (status === "loading" || !validate()) return;
     setStatus("loading");
 
+    const codigoAplicado = promoState.status === "valid" ? promoState.info.code : undefined;
+
     const base = {
       company_name: form.empresa.trim(),
       admin_email: form.email.trim(),
       phone: form.telefone.trim(),
       plan_code: plan.planCode,
       consent: true,
+      ...(showsVoucher && codigoAplicado ? { promo_code: codigoAplicado } : {}),
     };
 
     try {
@@ -199,6 +267,7 @@ export function PlanCheckoutDialog({
               </DialogTitle>
               <DialogDescription className="mt-2 text-[15px] text-text-muted sm:text-center">
                 Enviamos um link para você definir sua senha e acessar o painel.
+                {plan.action === "trial" && ` Seu teste de ${trialDays} dias já começou.`}
               </DialogDescription>
             </DialogHeader>
             <button
@@ -213,10 +282,10 @@ export function PlanCheckoutDialog({
           <>
             <DialogHeader>
               <DialogTitle className="text-xl font-bold tracking-tight text-text">
-                {TITLES[plan.action](plan.planName)}
+                {TITLES[plan.action](plan.planName, trialDays)}
               </DialogTitle>
               <DialogDescription className="text-[15px] text-text-muted">
-                {DESCRIPTIONS[plan.action]}
+                {DESCRIPTIONS[plan.action](trialDays)}
               </DialogDescription>
             </DialogHeader>
 
@@ -268,6 +337,22 @@ export function PlanCheckoutDialog({
                     />
                   </Field>
                 )}
+                {showsVoucher && (
+                  <Field label="Voucher (opcional)">
+                    <input
+                      className={`${inputCls} uppercase placeholder:normal-case ${
+                        promoState.status === "invalid" ? "border-danger focus:border-danger" : ""
+                      }`}
+                      value={promo}
+                      onChange={(e) => setPromo(e.target.value.toUpperCase())}
+                      placeholder="Código do parceiro"
+                      autoComplete="off"
+                      spellCheck={false}
+                      maxLength={32}
+                    />
+                    <PromoFeedback state={promoState} action={plan.action} />
+                  </Field>
+                )}
               </div>
 
               <label className="mt-5 flex items-start gap-3">
@@ -291,7 +376,7 @@ export function PlanCheckoutDialog({
 
               <button
                 type="submit"
-                disabled={status === "loading"}
+                disabled={status === "loading" || promoState.status === "checking"}
                 className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-btn bg-primary text-[15px] font-semibold text-primary-foreground shadow-soft transition-all hover:bg-primary-hover disabled:opacity-70"
               >
                 {status === "loading" && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -308,6 +393,41 @@ export function PlanCheckoutDialog({
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Retorno da consulta do voucher, logo abaixo do campo. */
+function PromoFeedback({ state, action }: { state: PromoState; action: DialogAction }) {
+  if (state.status === "idle") return null;
+
+  if (state.status === "checking") {
+    return (
+      <span className="mt-1.5 flex items-center gap-1.5 text-sm text-text-muted">
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        Verificando…
+      </span>
+    );
+  }
+
+  if (state.status === "invalid") {
+    return (
+      <span className="mt-1.5 flex items-center gap-1.5 text-sm text-danger">
+        <AlertCircle className="h-3.5 w-3.5 flex-none" />
+        {state.message}
+      </span>
+    );
+  }
+
+  // Válido, mas o benefício pode não valer para a ação em curso (ex.: voucher só
+  // de desconto num fluxo de teste grátis).
+  const beneficio =
+    action === "trial" || action === "subscribe" ? promoBenefitLabel(state.info, action) : null;
+
+  return (
+    <span className="mt-1.5 flex items-center gap-1.5 text-sm font-medium text-success">
+      <TicketPercent className="h-3.5 w-3.5 flex-none" />
+      {beneficio ?? "Voucher aplicado."}
+    </span>
   );
 }
 
