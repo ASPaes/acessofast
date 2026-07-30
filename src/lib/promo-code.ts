@@ -13,13 +13,13 @@ export const TRIAL_DAYS = 7;
  *   2. create-checkout-prod v3 — le `promo_code`, cobra com desconto, resgata
  *      o voucher e abre a janela.
  *
- * Enquanto a v3 nao estiver publicada isto TEM que ficar false: a v2 ignora
- * `promo_code`, entao a tela prometeria desconto, o Asaas cobraria o valor
- * cheio e o voucher nem seria resgatado.
+ * Publicadas em 30/07/2026 (webhook v4, checkout v5 = a v3 do codigo). Se algum
+ * dia for preciso voltar atras, virar isto para false esconde o campo de
+ * voucher do fluxo de assinatura sem mexer em function nenhuma.
  *
  * Os dias extras de trial nao dependem disso — ja funcionam ponta a ponta.
  */
-export const DESCONTO_NO_CHECKOUT_ATIVO = false;
+export const DESCONTO_NO_CHECKOUT_ATIVO = true;
 
 export type PromoCodeInfo = {
   code: string;
