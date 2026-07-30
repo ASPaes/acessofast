@@ -1015,6 +1015,101 @@ export type Database = {
           },
         ]
       }
+      promo_subscription_windows: {
+        Row: {
+          asaas_subscription_id: string | null
+          attempts: number
+          created_at: string
+          discount_months: number
+          discounted_value_cents: number
+          environment: string
+          full_value_cents: number
+          id: string
+          last_error: string | null
+          payments_counted: number
+          redemption_id: string
+          restored_at: string | null
+          signup_intent_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          asaas_subscription_id?: string | null
+          attempts?: number
+          created_at?: string
+          discount_months: number
+          discounted_value_cents: number
+          environment?: string
+          full_value_cents: number
+          id?: string
+          last_error?: string | null
+          payments_counted?: number
+          redemption_id: string
+          restored_at?: string | null
+          signup_intent_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          asaas_subscription_id?: string | null
+          attempts?: number
+          created_at?: string
+          discount_months?: number
+          discounted_value_cents?: number
+          environment?: string
+          full_value_cents?: number
+          id?: string
+          last_error?: string | null
+          payments_counted?: number
+          redemption_id?: string
+          restored_at?: string | null
+          signup_intent_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_subscription_windows_redemption_id_fkey"
+            columns: ["redemption_id"]
+            isOneToOne: false
+            referencedRelation: "promo_code_redemptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_subscription_windows_signup_intent_id_fkey"
+            columns: ["signup_intent_id"]
+            isOneToOne: false
+            referencedRelation: "signup_intents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promo_window_payments: {
+        Row: {
+          asaas_payment_id: string
+          counted_at: string
+          window_id: string
+        }
+        Insert: {
+          asaas_payment_id: string
+          counted_at?: string
+          window_id: string
+        }
+        Update: {
+          asaas_payment_id?: string
+          counted_at?: string
+          window_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_window_payments_window_id_fkey"
+            columns: ["window_id"]
+            isOneToOne: false
+            referencedRelation: "promo_subscription_windows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       signup_intents: {
         Row: {
           admin_email: string
@@ -1841,6 +1936,46 @@ export type Database = {
           extra_trial_days: number
           ok: boolean
           reason: string
+        }[]
+      }
+      promo_window_mark_failed: {
+        Args: { p_error: string; p_max_attempts?: number; p_window_id: string }
+        Returns: undefined
+      }
+      promo_window_mark_restored: {
+        Args: { p_window_id: string }
+        Returns: undefined
+      }
+      promo_window_open: {
+        Args: {
+          p_discount_months: number
+          p_discounted_value_cents: number
+          p_environment?: string
+          p_full_value_cents: number
+          p_redemption_id: string
+          p_signup_intent_id: string
+        }
+        Returns: string
+      }
+      promo_window_register_payment: {
+        Args: {
+          p_payment_id: string
+          p_signup_intent_id: string
+          p_subscription_id: string
+        }
+        Returns: {
+          full_value_cents: number
+          needs_restore: boolean
+          window_id: string
+        }[]
+      }
+      promo_windows_due_restore: {
+        Args: { p_limit?: number }
+        Returns: {
+          asaas_subscription_id: string
+          attempts: number
+          full_value_cents: number
+          window_id: string
         }[]
       }
       provision_from_intent: {

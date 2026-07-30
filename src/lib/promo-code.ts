@@ -4,12 +4,20 @@ import { supabase } from "@/integrations/supabase/client";
 export const TRIAL_DAYS = 7;
 
 /**
- * O desconto percentual so vira realidade quando a `create-checkout-prod`
- * souber ler `promo_code` e mandar o valor com desconto para o Asaas. Enquanto
- * isso for false, o campo de voucher nao aparece no fluxo de assinatura — nao
- * adianta prometer desconto que a cobranca nao aplica. Os dias extras de trial
- * ja funcionam ponta a ponta.
- * Ao atualizar a create-checkout-prod, virar para true e conferir o resgate.
+ * Liga o campo de voucher no fluxo de assinatura.
+ *
+ * Depende de DUAS functions no ar, nesta ordem:
+ *   1. asaas-webhook-prod v2 — conta as cobrancas e devolve o preco cheio no
+ *      fim da janela. Precisa vir ANTES, senao um voucher de N meses no mensal
+ *      abriria uma janela que ninguem fecha = desconto vitalicio.
+ *   2. create-checkout-prod v3 — le `promo_code`, cobra com desconto, resgata
+ *      o voucher e abre a janela.
+ *
+ * Enquanto a v3 nao estiver publicada isto TEM que ficar false: a v2 ignora
+ * `promo_code`, entao a tela prometeria desconto, o Asaas cobraria o valor
+ * cheio e o voucher nem seria resgatado.
+ *
+ * Os dias extras de trial nao dependem disso — ja funcionam ponta a ponta.
  */
 export const DESCONTO_NO_CHECKOUT_ATIVO = false;
 
@@ -32,6 +40,9 @@ const REASON_MESSAGES: Record<string, string> = {
   plan_not_eligible: "Este voucher não vale para o plano escolhido.",
   exhausted: "Este voucher atingiu o limite de usos.",
   already_used: "Este voucher já foi utilizado por este CPF/CNPJ.",
+  // Só vem da create-checkout-prod: o desconto derrubaria a cobrança abaixo do
+  // mínimo que o Asaas aceita no cartão.
+  discount_too_large: "Este voucher não pode ser aplicado a este plano.",
 };
 
 export function promoReasonMessage(reason?: string): string {

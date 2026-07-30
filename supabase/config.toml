@@ -1,1 +1,30 @@
 project_id = "plmfyibyrowbgjjyblcl"
+
+# verify_jwt precisa estar declarado para TODA function deste repo.
+# O padrao do `supabase functions deploy` e true; sem estes blocos, um deploy
+# pela CLI faria as chamadas anonimas voltarem 401 e derrubaria o cadastro, a
+# validacao de voucher, o checkout e a fila de webhooks do Asaas.
+#
+# So estao listadas as functions cujo fonte vive NESTE repo. As demais
+# (start-free-prod, signup-publico, create-renewal-prod, ...) sao deployadas de
+# outro lugar e se configuram por la.
+
+# --- Site comercial: visitante anonimo, sem sessao ---
+[functions.start-trial-prod]
+verify_jwt = false
+
+[functions.validate-promo-code]
+verify_jwt = false
+
+[functions.create-checkout-prod]
+verify_jwt = false
+
+# --- Asaas: quem chama e o gateway, nao um usuario ---
+# Autentica pelo header asaas-access-token, conferido dentro da function.
+[functions.asaas-webhook-prod]
+verify_jwt = false
+
+# --- Interno: chamado pelo pg_cron com a service_role key ---
+# Nao ha chamador anonimo, entao aqui verify_jwt fica LIGADO de proposito.
+[functions.promo-restore-sweep]
+verify_jwt = true
