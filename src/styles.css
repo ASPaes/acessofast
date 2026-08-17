@@ -126,6 +126,10 @@
 @layer base {
   * { border-color: var(--color-border); }
   html { scroll-behavior: smooth; }
+  /* Barra de rolagem escondida a pedido. Rolagem por roda, teclado, toque e
+     âncora continua igual — some só o indicador visual. */
+  html, body { scrollbar-width: none; }
+  html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -144,9 +148,134 @@
   backdrop-filter: saturate(160%) blur(14px);
   border-bottom: 1px solid var(--border);
 }
+/* Sem base opaca: só o brilho da marca por cima, pra deixar as partículas do
+   fundo aparecerem através do hero. */
 @utility mesh-hero {
-  background:
-    radial-gradient(60% 50% at 50% -10%, color-mix(in oklab, var(--brand) 8%, transparent) 0%, transparent 60%),
-    var(--bg);
+  background: radial-gradient(
+    60% 50% at 50% -10%,
+    color-mix(in oklab, var(--brand) 8%, transparent) 0%,
+    transparent 60%
+  );
+}
+
+/* ===== Spotlight dos cards de plano =====
+   A borda do card é uma moldura de 1px atrás de uma superfície opaca; o brilho
+   é um gradiente radial pintado nessa moldura e recortado pela superfície, de
+   onde sai o traço fino de luz. A posição vem de --spot-x/--spot-y, que o JS
+   grava em CADA card a partir do mesmo cursor — é isso que faz a luz atravessar
+   de um card para o vizinho em vez de reiniciar em cada um. Acende no hover da
+   grade inteira, não do card, pelo mesmo motivo. */
+.spotlight {
+  position: relative;
+  padding: 1px;
+  border-radius: var(--radius-card);
+  background: var(--border);
+}
+.spotlight-strong {
+  padding: 2px;
+  background: var(--primary);
+  box-shadow: 0 18px 40px -22px color-mix(in oklab, var(--primary) 55%, transparent);
+}
+
+.spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  background: radial-gradient(
+    240px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+    var(--brand-hover),
+    color-mix(in oklab, var(--brand) 45%, transparent) 35%,
+    transparent 65%
+  );
+}
+
+/* A cor de fundo fica por conta de quem usa (bg-surface, bg-surface-2, ...);
+   isolar cria o contexto de empilhamento que segura o halo abaixo do conteúdo. */
+.spotlight-inner {
+  position: relative;
+  isolation: isolate;
+  height: 100%;
+  border-radius: calc(var(--radius-card) - 2px);
+}
+
+/* Halo interno, bem mais fraco: dá volume ao card sem competir com o texto.
+   z-index negativo o mantém acima da superfície e abaixo de todo o conteúdo,
+   sem exigir wrapper nenhum em volta dos filhos. */
+.spotlight-inner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  background: radial-gradient(
+    260px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+    color-mix(in oklab, var(--brand) 16%, transparent),
+    transparent 60%
+  );
+}
+
+.spotlight-host:hover .spotlight::before,
+.spotlight-host:hover .spotlight-inner::before {
+  opacity: 1;
+}
+
+/* ===== Réplica do painel (AppDemo) =====
+   Paleta própria: aqui a gente imita a UI real do produto, que é navy, e não
+   o neutro do site. Escopo fechado em .af-app pra não vazar nos tokens acima. */
+.af-app {
+  --af-bg: #0a1120;
+  --af-chrome: #080e1b;
+  --af-card: #0e1729;
+  --af-card-2: #101c31;
+  --af-border: #1a2540;
+  --af-border-soft: #16203a;
+  --af-text: #e8eef8;
+  --af-text-muted: #93a1b8;
+  --af-text-faint: #6b7a93;
+  --af-blue: #2f6ae8;
+  --af-blue-soft: #17284a;
+  --af-blue-text: #74a6ff;
+  --af-green: #3ecf8e;
+  --af-amber: #e8b34a;
+}
+
+/* O painel é desenhado numa largura fixa e encolhido inteiro pra caber no
+   container — nunca cortado, nunca com rolagem lateral. O fator de escala vem
+   de um ResizeObserver; a altura sai do aspect-ratio, então o espaço já nasce
+   certo no SSR e não há salto de layout quando o JS assume. */
+@utility af-viewport {
+  position: relative;
+  aspect-ratio: 1320 / 780;
+  overflow: hidden;
+}
+/* Absoluto no canto: com o palco ancorado em 0,0 e a origem do scale em 0,0,
+   não existe caminho pra ele deslocar na horizontal e cortar de um lado. */
+@utility af-stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1320px;
+  height: 780px;
+  transform-origin: 0 0;
+}
+
+/* Poeira estelar do fundo do painel. */
+@utility af-stars {
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, 0.16), transparent),
+    radial-gradient(1px 1px at 34% 62%, rgba(255, 255, 255, 0.1), transparent),
+    radial-gradient(1px 1px at 58% 12%, rgba(255, 255, 255, 0.14), transparent),
+    radial-gradient(1px 1px at 71% 78%, rgba(255, 255, 255, 0.09), transparent),
+    radial-gradient(1px 1px at 88% 34%, rgba(255, 255, 255, 0.13), transparent),
+    radial-gradient(1px 1px at 22% 88%, rgba(255, 255, 255, 0.08), transparent),
+    radial-gradient(1px 1px at 47% 41%, rgba(255, 255, 255, 0.07), transparent),
+    radial-gradient(1px 1px at 94% 66%, rgba(255, 255, 255, 0.1), transparent);
 }
 /* ===== fim de src/styles.css ===== */

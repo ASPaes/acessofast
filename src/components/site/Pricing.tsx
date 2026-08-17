@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { useQuery } from "@tanstack/react-query";
 import { Check } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { SpotlightCard, SpotlightGroup } from "@/components/site/SpotlightCard";
+import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect";
 
 /** Opções do toggle. "individual" é uma visão à parte, não um ciclo de cobrança. */
 type View = "mensal" | "anual" | "individual";
@@ -137,13 +139,7 @@ function PlanCard({
   const isRecommended = plan.code === RECOMMENDED_PLAN_CODE;
 
   return (
-    <div
-      className={`relative flex h-full flex-col rounded-card bg-surface-2 p-6 ${
-        isRecommended
-          ? "border-2 border-primary shadow-lg shadow-primary/10"
-          : "border border-border shadow-soft"
-      }`}
-    >
+    <SpotlightCard strong={isRecommended} className="flex flex-col bg-surface-2 p-6">
       {isRecommended && (
         <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary-foreground shadow-soft">
           Recomendado
@@ -151,21 +147,41 @@ function PlanCard({
       )}
       <h3 className="text-lg font-bold tracking-tight text-text">{plan.name}</h3>
       {isFree ? (
-        <div className="mt-4"><span className="text-3xl font-extrabold tracking-tight text-text">Grátis</span></div>
+        <div className="mt-4">
+          <span className="text-3xl font-extrabold tracking-tight text-text">Grátis</span>
+        </div>
       ) : plan.is_custom || perMonth === null ? (
-        <div className="mt-4"><span className="text-3xl font-extrabold tracking-tight text-text">Sob consulta</span></div>
+        <div className="mt-4">
+          <span className="text-3xl font-extrabold tracking-tight text-text">Sob consulta</span>
+        </div>
       ) : (
         <div className="mt-4">
           <div className="flex items-baseline gap-1.5">
-            <span className="text-3xl font-extrabold tracking-tight text-text">{formatCents(perMonth)}</span>
+            <span className="text-3xl font-extrabold tracking-tight text-text">
+              {formatCents(perMonth)}
+            </span>
             <span className="text-sm text-text-muted">/mês</span>
           </div>
-          <p className="mt-1 text-sm text-text-muted">{billing === "anual" && plan.price_year_cents !== null ? `Equivale a ${formatCents(plan.price_year_cents)}/ano · em até 3x no cartão` : "Cobrança mensal, sem fidelidade"}</p>
+          <p className="mt-1 text-sm text-text-muted">
+            {billing === "anual" && plan.price_year_cents !== null
+              ? `Equivale a ${formatCents(plan.price_year_cents)}/ano · em até 3x no cartão`
+              : "Cobrança mensal, sem fidelidade"}
+          </p>
         </div>
       )}
       <ul className="mt-6 flex-1 space-y-3 text-left">
-        <li className="flex items-start gap-3"><span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-success/15 text-success"><Check className="h-3.5 w-3.5" strokeWidth={2.5} /></span><span className="text-[15px] text-text">{usersLabel(plan)}</span></li>
-        <li className="flex items-start gap-3"><span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-success/15 text-success"><Check className="h-3.5 w-3.5" strokeWidth={2.5} /></span><span className="text-[15px] text-text">{concurrencyLabel(plan)}</span></li>
+        <li className="flex items-start gap-3">
+          <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-success/15 text-success">
+            <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+          </span>
+          <span className="text-[15px] text-text">{usersLabel(plan)}</span>
+        </li>
+        <li className="flex items-start gap-3">
+          <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-success/15 text-success">
+            <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+          </span>
+          <span className="text-[15px] text-text">{concurrencyLabel(plan)}</span>
+        </li>
       </ul>
       <div className="mt-8 flex flex-col gap-2">
         {planButtons(plan).map((b) => (
@@ -179,7 +195,7 @@ function PlanCard({
           </button>
         ))}
       </div>
-    </div>
+    </SpotlightCard>
   );
 }
 
@@ -222,16 +238,74 @@ export function Pricing({ onSelectPlan }: PricingProps) {
   const hasPlans = visiblePlans.length > 0;
   const annualDiscount = annualDiscountPercent(plans ?? []);
 
+  /* A pílula do toggle é medida a partir do botão ativo em vez de ter posições
+     fixas: as opções têm larguras diferentes, e a do "Anual" ainda muda quando o
+     selo de desconto some. Medir antes do paint evita o pisca na montagem. */
+  const toggleRef = useRef<HTMLDivElement>(null);
+  const viewRefs = useRef<Partial<Record<View, HTMLButtonElement | null>>>({});
+  const [pill, setPill] = useState({ left: 0, top: 0, width: 0, height: 0 });
+
+  useIsomorphicLayoutEffect(() => {
+    const container = toggleRef.current;
+    const active = viewRefs.current[view];
+    if (!container || !active) return;
+
+    const measure = () =>
+      setPill({
+        left: active.offsetLeft,
+        top: active.offsetTop,
+        width: active.offsetWidth,
+        height: active.offsetHeight,
+      });
+
+    measure();
+    // Fonte carregando ou quebra de linha em tela estreita mudam as medidas.
+    const observer = new ResizeObserver(measure);
+    observer.observe(container);
+    observer.observe(active);
+    return () => observer.disconnect();
+    // annualDiscount entra porque o selo aparecendo muda a largura dos botões.
+  }, [view, annualDiscount]);
+
   return (
-    <section id="preco" className="bg-surface py-28">
+    <section id="preco" className="py-28">
       <div className="mx-auto max-w-6xl px-6">
         <div className="text-center">
-          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-primary">Planos e preços</p>
-          <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-text sm:text-5xl">Escolha o plano da sua operação.</h2>
-          <p className="mx-auto mt-4 max-w-xl text-lg text-text-muted">Preço fechado, sem excedente e sem reajuste surpresa.</p>
-          <div className="mt-8 inline-flex items-center gap-1 rounded-full border border-border bg-bg p-1">
+          <p className="text-sm font-semibold uppercase tracking-[0.14em] text-primary">
+            Planos e preços
+          </p>
+          <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-text sm:text-5xl">
+            Escolha o plano da sua operação.
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-lg text-text-muted">
+            Preço fechado, sem excedente e sem reajuste surpresa.
+          </p>
+          <div
+            ref={toggleRef}
+            className="relative mt-8 inline-flex items-center gap-1 rounded-full border border-border bg-bg p-1"
+          >
+            {/* Pílula única que desliza entre as opções, em vez de um fundo por
+                botão que apenas acende. Largura também é animada porque o selo
+                de desconto muda o tamanho do botão "Anual". */}
+            <span
+              aria-hidden
+              className="absolute top-0 left-0 rounded-full bg-primary transition-[transform,width,height] duration-300 ease-out motion-reduce:transition-none"
+              style={{
+                transform: `translate(${pill.left}px, ${pill.top}px)`,
+                width: pill.width,
+                height: pill.height,
+              }}
+            />
             {VIEWS.map((v) => (
-              <button key={v.value} type="button" onClick={() => setView(v.value)} className={`inline-flex items-center gap-2 rounded-full px-6 py-2 text-sm font-medium transition-colors ${view === v.value ? "bg-primary text-primary-foreground" : "text-text-muted hover:text-text"}`}>
+              <button
+                key={v.value}
+                ref={(el) => {
+                  viewRefs.current[v.value] = el;
+                }}
+                type="button"
+                onClick={() => setView(v.value)}
+                className={`relative inline-flex items-center gap-2 rounded-full px-6 py-2 text-sm font-medium transition-colors ${view === v.value ? "text-primary-foreground" : "text-text-muted hover:text-text"}`}
+              >
                 {v.label}
                 {/* Só como isca: com o Anual já selecionado o selo vira ruído dentro do botão ativo. */}
                 {v.value === "anual" && view !== "anual" && annualDiscount !== null && (
@@ -247,7 +321,10 @@ export function Pricing({ onSelectPlan }: PricingProps) {
         {isPending ? (
           <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="flex animate-pulse flex-col rounded-card border border-border bg-surface-2 p-6 shadow-soft">
+              <div
+                key={i}
+                className="flex animate-pulse flex-col rounded-card border border-border bg-surface-2 p-6 shadow-soft"
+              >
                 <div className="h-5 w-2/3 rounded bg-border-strong" />
                 <div className="mt-5 h-9 w-1/2 rounded bg-border-strong" />
                 <div className="mt-2 h-4 w-3/4 rounded bg-border" />
@@ -266,27 +343,24 @@ export function Pricing({ onSelectPlan }: PricingProps) {
         ) : view === "individual" ? (
           <div className="mt-14 mx-auto flex max-w-3xl flex-col items-center gap-8 md:flex-row md:items-stretch md:justify-center">
             <div className="max-w-sm text-center md:text-left md:self-center">
-              <h3 className="text-2xl font-extrabold tracking-tight text-text">
-                Comece sem custo
-              </h3>
+              <h3 className="text-2xl font-extrabold tracking-tight text-text">Comece sem custo</h3>
               <p className="mt-3 text-[15px] leading-relaxed text-text-muted">
                 Ideal para técnicos autônomos — 1 usuário, 1 acesso sem custo.
               </p>
             </div>
-            <div className="w-full max-w-sm">
+            <SpotlightGroup className="w-full max-w-sm">
               {visiblePlans.map((p) => (
                 <PlanCard key={p.code} plan={p} billing={billing} onSelect={handleSelect} />
               ))}
-            </div>
+            </SpotlightGroup>
           </div>
         ) : (
-          <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <SpotlightGroup className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
             {visiblePlans.map((p) => (
               <PlanCard key={p.code} plan={p} billing={billing} onSelect={handleSelect} />
             ))}
-          </div>
+          </SpotlightGroup>
         )}
-
       </div>
     </section>
   );

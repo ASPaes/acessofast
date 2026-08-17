@@ -1,11 +1,12 @@
 import { ArrowRight } from "lucide-react";
-import heroMockup from "@/assets/acessofast-dashboard-screenshot-v2.png.asset.json";
-
+import { AppDemo } from "@/components/site/app-demo/AppDemo";
+import { ParticlesBackground } from "@/components/site/ParticlesBackground";
 
 export function Hero() {
   return (
     <section id="top" className="relative overflow-hidden pt-32 pb-24 mesh-hero">
-      <div className="mx-auto max-w-6xl px-6">
+      <ParticlesBackground />
+      <div className="relative mx-auto max-w-6xl px-6">
         <div className="mx-auto max-w-3xl text-center">
           <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.28em] text-primary">
             <span className="h-px w-8 bg-primary/50" />
@@ -16,8 +17,8 @@ export function Hero() {
             <span className="block text-primary">sem surpresa no custo.</span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg text-text-muted">
-            A plataforma brasileira de acesso remoto e suporte de TI para MSPs, provedores de suporte e
-            equipes de TI. Preço transparente e previsível, soberania de dados.
+            A plataforma brasileira de acesso remoto e suporte de TI para MSPs, provedores de
+            suporte e equipes de TI. Preço transparente e previsível, soberania de dados.
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
             <a
@@ -25,7 +26,10 @@ export function Hero() {
               className="group inline-flex h-12 items-center gap-2 rounded-btn bg-primary px-6 text-[15px] font-semibold text-primary-foreground shadow-soft transition-all hover:bg-primary-hover hover:-translate-y-[1px]"
             >
               Solicitar demonstração
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" strokeWidth={2} />
+              <ArrowRight
+                className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+                strokeWidth={2}
+              />
             </a>
             <a
               href="#recursos"
@@ -35,31 +39,14 @@ export function Hero() {
             </a>
           </div>
         </div>
+      </div>
 
-        {/* Visual da tela de acesso remoto */}
-        <div className="relative mx-auto mt-20 max-w-5xl">
-          <div className="relative overflow-hidden rounded-card border border-border bg-surface shadow-lift">
-            <img
-              src={heroMockup.url}
-              alt="Painel do Acessofast mostrando dispositivos cadastrados no address book"
-              className="w-full"
-              width={1804}
-              height={872}
-              loading="eager"
-            />
-          </div>
-          <div className="absolute -bottom-5 left-1/2 -translate-x-1/2">
-            <div className="rounded-2xl border border-border bg-surface/90 px-6 py-4 shadow-soft backdrop-blur">
-              <div className="flex items-center gap-3">
-                <span className="h-2.5 w-2.5 rounded-full bg-success shadow-[0_0_0_4px_color-mix(in_oklab,var(--success)_20%,transparent)]" />
-                <span className="text-sm font-medium text-text">
-                  12 dispositivos · <span className="font-mono text-success">2 online</span>
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
+      {/* Réplica navegável do painel — sai um pouco da coluna de texto de propósito */}
+      <div className="relative mx-auto mt-20 max-w-7xl px-6">
+        <AppDemo />
+        <p className="mt-4 text-center text-xs text-text-faint">
+          Painel real do AcessoFast · clique no menu lateral para navegar. Dados ilustrativos.
+        </p>
       </div>
     </section>
   );

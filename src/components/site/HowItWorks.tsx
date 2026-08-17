@@ -1,3 +1,5 @@
+import { SpotlightCard, SpotlightGroup } from "@/components/site/SpotlightCard";
+
 const steps = [
   {
     n: "01",
@@ -28,18 +30,15 @@ export function HowItWorks() {
             Do zero ao primeiro atendimento em segundos.
           </h2>
         </div>
-        <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3">
+        <SpotlightGroup className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3">
           {steps.map((s) => (
-            <div
-              key={s.n}
-              className="relative rounded-card border border-border bg-surface p-8 shadow-soft"
-            >
+            <SpotlightCard key={s.n} className="bg-surface p-8">
               <span className="font-mono text-sm font-semibold text-accent-blue">{s.n}</span>
               <h3 className="mt-3 text-xl font-semibold text-text">{s.title}</h3>
               <p className="mt-2 text-[15px] leading-relaxed text-text-muted">{s.desc}</p>
-            </div>
+            </SpotlightCard>
           ))}
-        </div>
+        </SpotlightGroup>
       </div>
     </section>
   );

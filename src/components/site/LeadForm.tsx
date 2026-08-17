@@ -79,9 +79,7 @@ export function LeadForm() {
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-success/15 text-success">
           <CheckCircle2 className="h-7 w-7" strokeWidth={1.75} />
         </div>
-        <h3 className="mt-5 text-2xl font-bold tracking-tight text-text">
-          Recebemos seus dados.
-        </h3>
+        <h3 className="mt-5 text-2xl font-bold tracking-tight text-text">Recebemos seus dados.</h3>
         <p className="mt-2 text-[15px] text-text-muted">
           Nosso time entra em contato em breve para agendar a demonstração.
         </p>

@@ -34,9 +34,17 @@ export function Faq() {
         <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-text sm:text-5xl">
           Tudo o que você precisa saber.
         </h2>
-        <Accordion type="single" collapsible className="mt-10 rounded-card border border-border bg-surface shadow-soft">
+        <Accordion
+          type="single"
+          collapsible
+          className="mt-10 rounded-card border border-border bg-surface shadow-soft"
+        >
           {faqs.map((f, i) => (
-            <AccordionItem key={f.q} value={`item-${i}`} className="border-border px-6 last:border-b-0">
+            <AccordionItem
+              key={f.q}
+              value={`item-${i}`}
+              className="border-border px-6 last:border-b-0"
+            >
               <AccordionTrigger className="py-5 text-left text-[16px] font-semibold text-text hover:no-underline">
                 {f.q}
               </AccordionTrigger>

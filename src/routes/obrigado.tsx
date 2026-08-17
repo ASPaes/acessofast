@@ -20,7 +20,7 @@ export const Route = createFileRoute("/obrigado")({
 
 function ObrigadoPage() {
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex flex-1 items-center justify-center px-6 py-24">
         <section className="mx-auto w-full max-w-xl rounded-card border border-border bg-surface p-8 text-center shadow-soft sm:p-12">

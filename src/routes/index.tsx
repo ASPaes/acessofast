@@ -37,7 +37,7 @@ function Index() {
   const [checkout, setCheckout] = useState<Checkout | null>(null);
 
   return (
-    <div className="min-h-screen bg-bg text-text">
+    <div className="min-h-screen text-text">
       <Header />
       <main>
         <Hero />

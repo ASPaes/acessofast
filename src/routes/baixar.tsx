@@ -25,7 +25,7 @@ const steps = [
 
 function BaixarPage() {
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex flex-1 items-center justify-center px-6 py-24">
         <section className="mx-auto max-w-xl text-center">
@@ -36,7 +36,8 @@ function BaixarPage() {
             Baixe o Acessofast
           </h1>
           <p className="mx-auto mt-4 max-w-md text-pretty text-lg text-text-muted">
-            Instale o aplicativo, informe seu ID ao técnico e pronto. Sem cadastro, sem configuração.
+            Instale o aplicativo, informe seu ID ao técnico e pronto. Sem cadastro, sem
+            configuração.
           </p>
 
           <a
@@ -47,9 +48,7 @@ function BaixarPage() {
             Baixar para Windows
           </a>
 
-          <p className="mt-3 text-sm text-text-muted">
-            Windows 10 ou superior · instalador .exe
-          </p>
+          <p className="mt-3 text-sm text-text-muted">Windows 10 ou superior · instalador .exe</p>
 
           <ol className="mt-10 space-y-4 text-left">
             {steps.map((s, i) => (

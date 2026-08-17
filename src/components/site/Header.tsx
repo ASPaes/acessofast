@@ -45,7 +45,12 @@ export function Header() {
               {n.label}
             </a>
           ))}
-          <Link to="/baixar" className="text-sm font-medium text-text-muted transition-colors hover:text-text">Baixar</Link>
+          <Link
+            to="/baixar"
+            className="text-sm font-medium text-text-muted transition-colors hover:text-text"
+          >
+            Baixar
+          </Link>
         </nav>
         <a
           href="/#contato"
