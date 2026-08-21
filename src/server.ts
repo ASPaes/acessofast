@@ -18,6 +18,21 @@ async function getServerEntry(): Promise<ServerEntry> {
   return serverEntryPromise;
 }
 
+// www.* redireciona para o apex: o Google indexa uma origem so, e a URL que o
+// cliente ve bate com a que o checkout usa para montar os links de retorno
+// (SITE em supabase/functions/create-checkout-prod).
+// GET/HEAD levam 301 (o que todo crawler entende); qualquer outro metodo leva
+// 308, que preserva o metodo — um POST de server function vindo de uma aba
+// ainda aberta no www nao pode virar GET no meio do caminho.
+function apexRedirect(request: Request): Response | undefined {
+  const url = new URL(request.url);
+  if (!url.hostname.startsWith("www.")) return undefined;
+
+  url.hostname = url.hostname.slice("www.".length);
+  const status = request.method === "GET" || request.method === "HEAD" ? 301 : 308;
+  return new Response(null, { status, headers: { location: url.toString() } });
+}
+
 // h3 swallows in-handler throws into a normal 500 Response with body
 // {"unhandled":true,"message":"HTTPError"} — try/catch alone never fires for those.
 async function normalizeCatastrophicSsrResponse(response: Response): Promise<Response> {
@@ -47,6 +62,9 @@ function isH3SwallowedErrorBody(body: string): boolean {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      const redirect = apexRedirect(request);
+      if (redirect) return redirect;
+
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);
