@@ -6,7 +6,9 @@ import { Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { SpotlightCard, SpotlightGroup } from "@/components/site/SpotlightCard";
+import { LaunchOfferBar } from "@/components/site/LaunchOfferBar";
 import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect";
+import { applyLaunchDiscount, fetchLaunchOffer, type LaunchOffer } from "@/lib/launch-offer";
 
 /** Opções do toggle. "individual" é uma visão à parte, não um ciclo de cobrança. */
 type View = "mensal" | "anual" | "individual";
@@ -60,12 +62,43 @@ function formatCents(cents: number) {
   return Number.isInteger(value) ? brlWhole.format(value) : brlCents.format(value);
 }
 
-/** Valor mensal exibido. No anual é calculado: price_year_cents é o TOTAL do ano. */
-function monthlyCents(plan: Plan, billing: BillingCycle): number | null {
-  if (billing === "anual") {
-    return plan.price_year_cents === null ? null : plan.price_year_cents / 12;
+/** Total cobrado no ciclo: no anual é o ano inteiro, no mensal é o mês. */
+function cycleCents(plan: Plan, billing: BillingCycle): number | null {
+  return billing === "anual" ? plan.price_year_cents : plan.price_month_cents;
+}
+
+type PlanPrices = {
+  /** Mensalidade exibida. No anual é o total do ano dividido por 12. */
+  perMonth: number | null;
+  /** Total do ciclo já com a oferta. No mensal é igual à mensalidade. */
+  cycleTotal: number | null;
+  /** Mensalidade de tabela, só quando a oferta está aplicada (preço riscado). */
+  perMonthBefore: number | null;
+};
+
+/**
+ * Preço do card. Quando a oferta de lançamento está valendo, o desconto é
+ * aplicado sobre o TOTAL do ciclo e só depois dividido por 12 — a mesma ordem
+ * da create-checkout-prod, senão o arredondamento faria a vitrine e a cobrança
+ * divergirem em centavos.
+ */
+function planPrices(plan: Plan, billing: BillingCycle, offer: LaunchOffer | null): PlanPrices {
+  const full = cycleCents(plan, billing);
+  if (full === null) return { perMonth: null, cycleTotal: null, perMonthBefore: null };
+
+  const meses = billing === "anual" ? 12 : 1;
+  // Plano gratuito e enterprise ficam de fora: não há valor para descontar.
+  const aplicaOferta = !!offer?.is_active && !plan.is_custom && full > 0;
+  if (!aplicaOferta) {
+    return { perMonth: full / meses, cycleTotal: full, perMonthBefore: null };
   }
-  return plan.price_month_cents;
+
+  const comDesconto = applyLaunchDiscount(full, offer!.discount_percent);
+  return {
+    perMonth: comDesconto / meses,
+    cycleTotal: comDesconto,
+    perMonthBefore: full / meses,
+  };
 }
 
 /**
@@ -128,14 +161,16 @@ const secondaryButtonClass =
 function PlanCard({
   plan,
   billing,
+  offer,
   onSelect,
 }: {
   plan: Plan;
   billing: BillingCycle;
+  offer: LaunchOffer | null;
   onSelect: (planCode: string, action: PlanAction) => void;
 }) {
   const isFree = !plan.is_custom && plan.price_month_cents === 0;
-  const perMonth = monthlyCents(plan, billing);
+  const { perMonth, cycleTotal, perMonthBefore } = planPrices(plan, billing, offer);
   const isRecommended = plan.code === RECOMMENDED_PLAN_CODE;
 
   return (
@@ -156,6 +191,17 @@ function PlanCard({
         </div>
       ) : (
         <div className="mt-4">
+          {/* Preço de tabela riscado só existe enquanto a oferta vale. */}
+          {perMonthBefore !== null && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-text-faint line-through">
+                {formatCents(perMonthBefore)}
+              </span>
+              <span className="rounded-full bg-success/15 px-2 py-0.5 text-xs font-semibold text-success">
+                -{offer!.discount_percent}%
+              </span>
+            </div>
+          )}
           <div className="flex items-baseline gap-1.5">
             <span className="text-3xl font-extrabold tracking-tight text-text">
               {formatCents(perMonth)}
@@ -163,10 +209,16 @@ function PlanCard({
             <span className="text-sm text-text-muted">/mês</span>
           </div>
           <p className="mt-1 text-sm text-text-muted">
-            {billing === "anual" && plan.price_year_cents !== null
-              ? `Equivale a ${formatCents(plan.price_year_cents)}/ano · em até 3x no cartão`
+            {billing === "anual" && cycleTotal !== null
+              ? `Equivale a ${formatCents(cycleTotal)}/ano · em até 3x no cartão`
               : "Cobrança mensal, sem fidelidade"}
           </p>
+          {perMonthBefore !== null && (
+            <p className="mt-1 text-sm font-medium text-brand">
+              Preço de lançamento ·{" "}
+              {offer!.slots_left === 1 ? "última vaga" : `restam ${offer!.slots_left} vagas`}
+            </p>
+          )}
         </div>
       )}
       <ul className="mt-6 flex-1 space-y-3 text-left">
@@ -222,6 +274,16 @@ export function Pricing({ onSelectPlan }: PricingProps) {
     },
     staleTime: 5 * 60 * 1000,
   });
+
+  /* Oferta de lançamento. Fica em query separada de propósito: se ela falhar, a
+     página cai no preço de tabela em vez de ficar sem preço nenhum. staleTime
+     curto porque a barra precisa acompanhar as contratações. */
+  const { data: offerData } = useQuery({
+    queryKey: ["site", "launch-offer"],
+    queryFn: fetchLaunchOffer,
+    staleTime: 60 * 1000,
+  });
+  const offer = offerData?.is_active ? offerData : null;
 
   const handleSelect = (planCode: string, action: PlanAction) => {
     if (onSelectPlan) {
@@ -316,6 +378,9 @@ export function Pricing({ onSelectPlan }: PricingProps) {
               </button>
             ))}
           </div>
+
+          {/* Some sozinho quando a oferta acaba ou as vagas se esgotam. */}
+          {offer && <LaunchOfferBar offer={offer} />}
         </div>
 
         {isPending ? (
@@ -350,14 +415,26 @@ export function Pricing({ onSelectPlan }: PricingProps) {
             </div>
             <SpotlightGroup className="w-full max-w-sm">
               {visiblePlans.map((p) => (
-                <PlanCard key={p.code} plan={p} billing={billing} onSelect={handleSelect} />
+                <PlanCard
+                  key={p.code}
+                  plan={p}
+                  billing={billing}
+                  offer={offer}
+                  onSelect={handleSelect}
+                />
               ))}
             </SpotlightGroup>
           </div>
         ) : (
           <SpotlightGroup className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
             {visiblePlans.map((p) => (
-              <PlanCard key={p.code} plan={p} billing={billing} onSelect={handleSelect} />
+              <PlanCard
+                key={p.code}
+                plan={p}
+                billing={billing}
+                offer={offer}
+                onSelect={handleSelect}
+              />
             ))}
           </SpotlightGroup>
         )}

@@ -1,5 +1,20 @@
-// AcessoFast — create-checkout-prod (v4)
+// AcessoFast — create-checkout-prod (v5)
 // PRODUCAO. verify_jwt = FALSE: chamado pelo site comercial (visitante anonimo).
+//
+// v5 (21/08/2026) — oferta de lancamento (public.launch_offer):
+//   Enquanto sobrar vaga entre as N primeiras empresas contratantes, o valor
+//   cobrado sai do preco de tabela com o desconto da oferta. Quem manda e a RPC
+//   launch_offer_status — a MESMA que o site le para montar a vitrine e a barra
+//   de vagas. Se essa consulta falhar, o checkout ABORTA em vez de cair no preco
+//   cheio: cobrar mais do que a pagina prometeu e pior do que nao vender.
+//
+//   Nao acumula com voucher: vale o MAIOR dos dois descontos. O voucher continua
+//   sendo resgatado mesmo quando perde, porque o resgate tambem e o registro de
+//   atribuicao do parceiro que indicou a venda.
+//
+//   O desconto de lancamento nao abre promo_subscription_windows: ele e
+//   definitivo para quem entrou na janela das primeiras empresas. A janela
+//   continua existindo so para o voucher com discount_months.
 //
 // v4 (30/07/2026) — o resgate passa a levar doc_hash:
 //   O assinar nao pedia CPF/CNPJ (quem coleta e o checkout do Asaas), entao o
@@ -189,20 +204,47 @@ Deno.serve(async (req) => {
     discount_months = linha.discount_months ?? null;
   }
 
+  // (v5) Oferta de lancamento. is_active ja vem combinado com "ainda ha vaga",
+  // entao aqui nao se repete regra nenhuma da promocao.
+  const { data: lo, error: loErr } = await db.rpc("launch_offer_status");
+  if (loErr) {
+    // Sem saber se a oferta vale, o valor certo e desconhecido. Abortar e a
+    // unica saida que nao arrisca cobrar acima do anunciado.
+    console.error("launch_offer_status failed:", loErr.message);
+    return j({ error: "db_error", detail: loErr.message }, 500);
+  }
+  const oferta = umaLinha(lo);
+  const launch_percent = oferta?.is_active ? (oferta.discount_percent ?? null) : null;
+
   // Os dias extras de trial do voucher nao valem aqui: assinatura nao tem trial.
   // Se o voucher so der dias, ele e aceito e simplesmente nao muda o preco.
-  const amount_cents = discount_percent === null
+  //
+  // (v5) Lancamento e voucher NAO se somam: aplica-se o maior. Empate vai para o
+  // lancamento, que e o mais simples (nao abre janela de restauracao).
+  const usa_lancamento =
+    launch_percent !== null && launch_percent >= (discount_percent ?? 0);
+  const applied_percent = usa_lancamento ? launch_percent : discount_percent;
+  const applied_source = applied_percent === null ? null : usa_lancamento ? "launch" : "promo";
+
+  const amount_cents = applied_percent === null
     ? full_cents
-    : Math.round((full_cents * (100 - discount_percent)) / 100);
+    : Math.round((full_cents * (100 - applied_percent)) / 100);
 
-  if (discount_percent !== null && amount_cents < MIN_CHARGE_CENTS)
-    return j({ error: "promo_code_invalid", reason: "discount_too_large" }, 400);
+  if (applied_percent !== null && amount_cents < MIN_CHARGE_CENTS) {
+    // Na pratica so um voucher chega a esse ponto; o desconto de lancamento e
+    // teto de 90% sobre planos de centenas de reais.
+    if (applied_source === "promo")
+      return j({ error: "promo_code_invalid", reason: "discount_too_large" }, 400);
+    console.error("desconto de lancamento abaixo do minimo do Asaas:", plan_code, amount_cents);
+    return j({ error: "amount_below_minimum" }, 400);
+  }
 
-  // A janela so faz sentido no mensal com prazo. No anual a cobranca e unica; no
-  // mensal sem prazo o desconto vale enquanto a assinatura durar, que e o que o
-  // value reduzido ja faz.
+  // A janela so faz sentido no mensal com prazo, e so para o voucher: o preco de
+  // lancamento nao volta ao cheio para quem entrou entre as primeiras empresas.
+  // No anual a cobranca e unica; no mensal sem prazo o desconto vale enquanto a
+  // assinatura durar, que e o que o value reduzido ja faz.
   const precisaJanela =
-    discount_percent !== null && discount_months !== null && billing_cycle === "monthly";
+    applied_source === "promo" && discount_months !== null && billing_cycle === "monthly";
 
   const { data: intent, error: intentErr } = await db
     .from("signup_intents")
@@ -268,7 +310,12 @@ Deno.serve(async (req) => {
   }
 
   const value = amount_cents / 100;
-  const sufixoDesconto = discount_percent !== null ? ` — ${discount_percent}% OFF (${promo_code})` : "";
+  const sufixoDesconto =
+    applied_source === "launch"
+      ? ` — Preco de lancamento ${applied_percent}% OFF`
+      : applied_source === "promo"
+        ? ` — ${applied_percent}% OFF (${promo_code})`
+        : "";
   const payload = {
     billingTypes: ["CREDIT_CARD"],
     minutesToExpire: 60,
@@ -323,7 +370,12 @@ Deno.serve(async (req) => {
     promo_code: promo_code || null,
     amount_cents,
     full_amount_cents: full_cents,
+    // Do voucher, aceito ou nao aplicado por perder para o lancamento.
     discount_percent,
     discount_months,
+    // (v5) O que de fato entrou no preco.
+    applied_discount_percent: applied_percent,
+    discount_source: applied_source,
+    launch_discount_percent: launch_percent,
   });
 });

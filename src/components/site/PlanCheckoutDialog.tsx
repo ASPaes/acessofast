@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, CheckCircle2, TicketPercent, AlertCircle } from "lucide-react";
+import { Loader2, CheckCircle2, TicketPercent, AlertCircle, Zap } from "lucide-react";
 
 import {
   Dialog,
@@ -19,6 +20,7 @@ import {
   TRIAL_DAYS,
   type PromoCodeInfo,
 } from "@/lib/promo-code";
+import { fetchLaunchOffer } from "@/lib/launch-offer";
 
 export type DialogAction = "subscribe" | "trial" | "free";
 
@@ -136,6 +138,15 @@ export function PlanCheckoutDialog({
   // o MESMO voucher duas vezes (uq_promo_redemptions_code_doc). Sem ele o único
   // limite seria o teto global de usos do código.
   const needsDocument = plan.action !== "subscribe" || usandoVoucher;
+
+  /* Mesma query do Pricing (mesma chave = mesmo cache): o aviso aqui repete o
+     que a vitrine prometeu, para o valor do checkout não chegar sem explicação. */
+  const { data: offerData } = useQuery({
+    queryKey: ["site", "launch-offer"],
+    queryFn: fetchLaunchOffer,
+    staleTime: 60 * 1000,
+  });
+  const offer = offerData?.is_active ? offerData : null;
 
   const promoInfo = promoState.status === "valid" ? promoState.info : null;
   const trialDays = plan.action === "trial" ? trialDaysWith(promoInfo) : TRIAL_DAYS;
@@ -315,6 +326,27 @@ export function PlanCheckoutDialog({
                 {DESCRIPTIONS[plan.action](trialDays)}
               </DialogDescription>
             </DialogHeader>
+
+            {plan.action === "subscribe" && offer && (
+              <div className="mt-3 flex items-start gap-2.5 rounded-btn border border-brand/30 bg-brand-soft/60 px-3.5 py-3">
+                <span className="mt-0.5 flex h-5 w-5 flex-none items-center justify-center rounded-full bg-brand/15 text-brand">
+                  <Zap className="h-3 w-3" strokeWidth={2.5} />
+                </span>
+                <span className="text-sm leading-relaxed text-text">
+                  Preço de lançamento de {offer.discount_percent}% já aplicado —{" "}
+                  {offer.slots_left === 1
+                    ? "esta é a última das"
+                    : `restam ${offer.slots_left} das`}{" "}
+                  {offer.slots_total} vagas.
+                  {showsVoucher && (
+                    <span className="text-text-muted">
+                      {" "}
+                      Não acumula com voucher: vale o maior desconto.
+                    </span>
+                  )}
+                </span>
+              </div>
+            )}
 
             <form
               className="mt-2"

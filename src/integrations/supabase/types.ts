@@ -758,6 +758,36 @@ export type Database = {
           },
         ]
       }
+      launch_offer: {
+        Row: {
+          created_at: string
+          discount_percent: number
+          id: boolean
+          is_active: boolean
+          manual_taken: number
+          slots_total: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          discount_percent?: number
+          id?: boolean
+          is_active?: boolean
+          manual_taken?: number
+          slots_total?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          discount_percent?: number
+          id?: boolean
+          is_active?: boolean
+          manual_taken?: number
+          slots_total?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           company: string | null
@@ -1908,6 +1938,16 @@ export type Database = {
           key_version: number
         }[]
       }
+      launch_offer_status: {
+        Args: never
+        Returns: {
+          is_active: boolean
+          discount_percent: number
+          slots_total: number
+          slots_taken: number
+          slots_left: number
+        }[]
+      }
       meter_external_session: {
         Args: {
           p_connection_log_id: string
@@ -2073,6 +2113,15 @@ export type Database = {
           p_key_version: number
         }
         Returns: undefined
+      }
+      set_launch_offer: {
+        Args: {
+          p_discount_percent?: number
+          p_is_active?: boolean
+          p_manual_taken?: number
+          p_slots_total?: number
+        }
+        Returns: Database["public"]["Tables"]["launch_offer"]["Row"]
       }
       set_promo_code_active: {
         Args: { p_active: boolean; p_id: string }
