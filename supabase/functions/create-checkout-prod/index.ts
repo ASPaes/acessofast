@@ -230,7 +230,7 @@ Deno.serve(async (req) => {
   // Se o voucher so der dias, ele e aceito e simplesmente nao muda o preco.
   //
   // (v5) Lancamento e voucher NAO se somam: aplica-se o maior. Empate vai para o
-  // lancamento, que e o mais simples (nao abre janela de restauracao).
+  // lancamento, que e a promessa feita na vitrine para todo mundo.
   const usa_lancamento =
     launch_percent !== null && launch_percent >= (discount_percent ?? 0);
   const applied_percent = usa_lancamento ? launch_percent : discount_percent;
