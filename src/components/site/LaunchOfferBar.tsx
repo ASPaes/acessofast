@@ -1,8 +1,28 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 
 import { Zap } from "lucide-react";
 
+import {
+  ProgressiveFluxLoader,
+  type ProgressiveFluxPhase,
+} from "@/components/ui/progressive-flux-loader";
 import type { LaunchOffer } from "@/lib/launch-offer";
+
+/* Não aparecem na tela (o rótulo grande do loader fica desligado): é o que o
+   leitor de tela anuncia junto com a porcentagem, via aria-valuetext. */
+const FASES: ProgressiveFluxPhase[] = [
+  { at: 0, label: "vagas abertas" },
+  { at: 50, label: "metade das vagas preenchidas" },
+  { at: 80, label: "últimas vagas" },
+  { at: 100, label: "vagas esgotadas" },
+];
+
+/* As duas pontas do gradiente saem do tema em vez do azul embutido no
+   componente, para a barra ser da marca e não de outro produto. */
+const CORES_DA_MARCA = {
+  "--flux-from": "var(--primary)",
+  "--flux-to": "var(--brand-cyan)",
+} as CSSProperties;
 
 /**
  * Aviso da oferta de lançamento + barra de vagas.
@@ -11,16 +31,21 @@ import type { LaunchOffer } from "@/lib/launch-offer";
  * fecha contrato (public.launch_offer_status conta as assinaturas pagas), e
  * quando enche a oferta acaba e este bloco some da página — quem cuida disso é
  * o `is_active` que vem do banco, não uma data no código.
+ *
+ * O preenchimento é o ProgressiveFluxLoader com `showLabel={false}`: o rótulo
+ * gigante dele é de tela de carregamento e brigaria com o título do card, mas o
+ * brilho e o sheen deslizando são justamente o que faz a barra parecer viva em
+ * vez de um número parado.
  */
 export function LaunchOfferBar({ offer }: { offer: LaunchOffer }) {
   const pct = Math.min(100, Math.round((offer.slots_taken / offer.slots_total) * 100));
 
   /* A barra nasce vazia e cresce até a posição real depois do primeiro paint:
      ela é o elemento que conta a história, e um preenchimento já pronto na
-     montagem passa despercebido. */
-  const [width, setWidth] = useState(0);
+     montagem passa despercebido. O loader anima a mudança de `value` sozinho. */
+  const [value, setValue] = useState(0);
   useEffect(() => {
-    const timer = window.setTimeout(() => setWidth(pct), 120);
+    const timer = window.setTimeout(() => setValue(pct), 120);
     return () => window.clearTimeout(timer);
   }, [pct]);
 
@@ -47,19 +72,15 @@ export function LaunchOfferBar({ offer }: { offer: LaunchOffer }) {
         disso, volta o preço de tabela.
       </p>
 
-      <div
-        className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-border-strong"
-        role="progressbar"
-        aria-valuemin={0}
-        aria-valuemax={offer.slots_total}
-        aria-valuenow={offer.slots_taken}
-        aria-label={`${offer.slots_taken} de ${offer.slots_total} vagas preenchidas`}
-      >
-        <div
-          className="h-full rounded-full bg-gradient-to-r from-brand to-brand-cyan transition-[width] duration-1000 ease-out motion-reduce:transition-none"
-          style={{ width: `${width}%` }}
-        />
-      </div>
+      <ProgressiveFluxLoader
+        value={value}
+        phases={FASES}
+        showLabel={false}
+        style={CORES_DA_MARCA}
+        className="mt-4 max-w-none"
+        barClassName="h-4 bg-bg/80 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]"
+        ariaLabel={`Vagas do preço de lançamento: ${offer.slots_taken} de ${offer.slots_total}`}
+      />
 
       <div className="mt-2 flex items-baseline justify-between text-sm">
         <span className="font-semibold text-text">
