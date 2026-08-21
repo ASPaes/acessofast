@@ -72,10 +72,14 @@ export function LaunchOfferBar({ offer }: { offer: LaunchOffer }) {
         disso, volta o preço de tabela.
       </p>
 
+      {/* idleSheen: com 0 contratações não há preenchimento nenhum para mostrar,
+          e uma barra chapada lê como quebrada. O brilho passando pelo trilho diz
+          "está valendo, ninguém pegou ainda" sem fingir vaga preenchida. */}
       <ProgressiveFluxLoader
         value={value}
         phases={FASES}
         showLabel={false}
+        idleSheen
         style={CORES_DA_MARCA}
         className="mt-4 max-w-none"
         barClassName="h-4 bg-bg/80 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]"
@@ -84,7 +88,11 @@ export function LaunchOfferBar({ offer }: { offer: LaunchOffer }) {
 
       <div className="mt-2 flex items-baseline justify-between text-sm">
         <span className="font-semibold text-text">
-          {offer.slots_taken} de {offer.slots_total} vagas preenchidas
+          {/* Zero vagas preenchidas é notícia boa para quem está lendo: em vez de
+              anunciar que ninguém comprou, convida a ser o primeiro. */}
+          {offer.slots_taken === 0
+            ? `Seja a primeira das ${offer.slots_total} empresas`
+            : `${offer.slots_taken} de ${offer.slots_total} vagas preenchidas`}
         </span>
         <span className="text-text-muted">{pct}%</span>
       </div>

@@ -30,6 +30,13 @@ export interface ProgressiveFluxLoaderProps {
   /** Show the animated phase label above the bar. Default `true`. */
   showLabel?: boolean;
   /**
+   * Sweep a faint sheen across the empty part of the track. Off by default,
+   * because a loader is never at rest for long. Turn it on when the bar can sit
+   * near zero for a while (a seat counter, a quota) — otherwise a `0%` bar is
+   * an empty tube that reads as broken rather than as "nothing yet".
+   */
+  idleSheen?: boolean;
+  /**
    * CSS background for the bar fill. Defaults to the signature vivid blue → cyan
    * flux gradient. Pass any CSS background to replace it, or recolor the default
    * via the `--flux-from` / `--flux-to` CSS variables (e.g. set them to
@@ -86,6 +93,11 @@ const BAR_SHADOW = `0 0 18px color-mix(in oklab, ${FLUX_FROM} 55%, transparent),
 // reads as a bright glide regardless of theme.
 const SHEEN_GRADIENT =
   "linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.55) 50%, transparent 100%)";
+
+// Sheen do trilho vazio (`idleSheen`): tem a cor do preenchimento, não o branco
+// do sheen de cima, para ler como "esta barra é azul e ainda não encheu" em vez
+// de um segundo brilho disputando atenção com o fill.
+const IDLE_SHEEN_GRADIENT = `linear-gradient(90deg, transparent 0%, color-mix(in oklab, ${FLUX_TO} 22%, transparent) 50%, transparent 100%)`;
 
 const Z_TRANSITION: Transition = { duration: 0.9, ease: [0.22, 1, 0.36, 1] };
 const LETTER_TRANSITION: Transition = {
@@ -181,6 +193,7 @@ export function ProgressiveFluxLoader({
   duration = 12,
   loop = true,
   showLabel = true,
+  idleSheen = false,
   gradient = DEFAULT_GRADIENT,
   onComplete,
   ariaLabel = "Loading",
@@ -283,6 +296,17 @@ export function ProgressiveFluxLoader({
         aria-valuetext={label ? `${rounded}% – ${label}` : `${rounded}%`}
         aria-label={ariaLabel}
       >
+        {/* Fica ATRÁS do preenchimento (sem z-index, vem antes no fluxo), então
+            no 0% ele é a única coisa que se move e no 100% some por baixo. */}
+        {idleSheen && !reduced && (
+          <motion.span
+            aria-hidden
+            className="pointer-events-none absolute inset-y-0 left-0 w-1/3"
+            style={{ background: IDLE_SHEEN_GRADIENT }}
+            animate={{ x: ["-100%", "320%"] }}
+            transition={{ duration: 2.8, ease: "linear", repeat: Infinity, repeatDelay: 0.6 }}
+          />
+        )}
         <motion.div
           className="relative h-full rounded-full"
           style={{ background: gradient, boxShadow: BAR_SHADOW }}
