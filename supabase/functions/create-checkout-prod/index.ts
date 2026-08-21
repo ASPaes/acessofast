@@ -68,8 +68,11 @@ const HMAC_KEY = Deno.env.get("TRIAL_DOC_HMAC_KEY")!;
 
 const SITE = "https://acessofast.com.br";
 const URL_SUCCESS = `${SITE}/obrigado`;
-const URL_CANCEL = `${SITE}/planos`;
-const URL_EXPIRED = `${SITE}/planos`;
+// /planos nunca existiu como rota: os precos sao a seccao #preco da home. Isso
+// mandava para um 404 (e em ingles) justamente quem cancelou ou deixou a sessao
+// do Asaas expirar — gente que ainda estava a um clique de assinar.
+const URL_CANCEL = `${SITE}/#preco`;
+const URL_EXPIRED = `${SITE}/#preco`;
 const TZ = "America/Sao_Paulo";
 
 const SELF_SERVE_PLANS = ["team", "business", "scale"]; // enterprise = venda assistida
