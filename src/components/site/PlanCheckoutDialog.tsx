@@ -333,7 +333,11 @@ export function PlanCheckoutDialog({
                   <Zap className="h-3 w-3" strokeWidth={2.5} />
                 </span>
                 <span className="text-sm leading-relaxed text-text">
-                  Preço de lançamento de {offer.discount_percent}% já aplicado —{" "}
+                  Preço de lançamento de {offer.discount_percent}% já aplicado
+                  {offer.discount_months !== null && plan.billingCycle === "mensal"
+                    ? ` nas ${offer.discount_months} primeiras mensalidades`
+                    : ""}{" "}
+                  —{" "}
                   {offer.slots_left === 1
                     ? "esta é a última das"
                     : `restam ${offer.slots_left} das`}{" "}

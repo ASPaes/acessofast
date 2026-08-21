@@ -1,5 +1,16 @@
-// AcessoFast — create-checkout-prod (v5)
+// AcessoFast — create-checkout-prod (v6)
 // PRODUCAO. verify_jwt = FALSE: chamado pelo site comercial (visitante anonimo).
+//
+// v6 (21/08/2026) — o preco de lancamento passa a ter PRAZO:
+//   Antes ele era definitivo para quem entrasse entre as primeiras empresas.
+//   Agora vale por launch_offer.discount_months (12) e depois a assinatura volta
+//   ao preco de tabela — a mesma promessa que o site anuncia.
+//
+//   No anual nada muda: a cobranca e unica e ja cobre o periodo. No MENSAL abre
+//   uma promo_subscription_windows, exatamente como o voucher com prazo faz; a
+//   asaas-webhook-prod conta as cobrancas pagas e devolve o valor cheio na
+//   decima terceira. A janela nasce com redemption_id NULL, que e como se
+//   distingue "desconto de lancamento" de "desconto de voucher".
 //
 // v5 (21/08/2026) — oferta de lancamento (public.launch_offer):
 //   Enquanto sobrar vaga entre as N primeiras empresas contratantes, o valor
@@ -11,10 +22,6 @@
 //   Nao acumula com voucher: vale o MAIOR dos dois descontos. O voucher continua
 //   sendo resgatado mesmo quando perde, porque o resgate tambem e o registro de
 //   atribuicao do parceiro que indicou a venda.
-//
-//   O desconto de lancamento nao abre promo_subscription_windows: ele e
-//   definitivo para quem entrou na janela das primeiras empresas. A janela
-//   continua existindo so para o voucher com discount_months.
 //
 // v4 (30/07/2026) — o resgate passa a levar doc_hash:
 //   O assinar nao pedia CPF/CNPJ (quem coleta e o checkout do Asaas), entao o
@@ -215,6 +222,9 @@ Deno.serve(async (req) => {
   }
   const oferta = umaLinha(lo);
   const launch_percent = oferta?.is_active ? (oferta.discount_percent ?? null) : null;
+  // null aqui significa "sem prazo": o preco de lancamento valeria enquanto a
+  // assinatura durasse. Hoje vem 12.
+  const launch_months = launch_percent === null ? null : (oferta.discount_months ?? null);
 
   // Os dias extras de trial do voucher nao valem aqui: assinatura nao tem trial.
   // Se o voucher so der dias, ele e aceito e simplesmente nao muda o preco.
@@ -239,12 +249,16 @@ Deno.serve(async (req) => {
     return j({ error: "amount_below_minimum" }, 400);
   }
 
-  // A janela so faz sentido no mensal com prazo, e so para o voucher: o preco de
-  // lancamento nao volta ao cheio para quem entrou entre as primeiras empresas.
-  // No anual a cobranca e unica; no mensal sem prazo o desconto vale enquanto a
-  // assinatura durar, que e o que o value reduzido ja faz.
+  // Prazo do desconto que de fato entrou no preco. (v6) O lancamento tambem tem
+  // prazo agora, entao os dois caminhos caem na mesma regra.
+  const applied_months =
+    applied_source === "launch" ? launch_months : applied_source === "promo" ? discount_months : null;
+
+  // A janela so faz sentido no mensal com prazo. No anual a cobranca e unica e
+  // ja cobre o periodo; no mensal sem prazo o desconto vale enquanto a
+  // assinatura durar, que e o que o value reduzido ja faz sozinho.
   const precisaJanela =
-    applied_source === "promo" && discount_months !== null && billing_cycle === "monthly";
+    applied_percent !== null && applied_months !== null && billing_cycle === "monthly";
 
   const { data: intent, error: intentErr } = await db
     .from("signup_intents")
@@ -292,13 +306,15 @@ Deno.serve(async (req) => {
     redemptionId = linha.redemption_id;
   }
 
-  if (redemptionId && precisaJanela) {
+  // (v6) Nao depende mais de haver voucher: o desconto de lancamento abre a
+  // janela do mesmo jeito, com redemption_id nulo.
+  if (precisaJanela) {
     const { error: wErr } = await db.rpc("promo_window_open", {
-      p_redemption_id: redemptionId,
+      p_redemption_id: applied_source === "promo" ? redemptionId : null,
       p_signup_intent_id: intent.id,
       p_full_value_cents: full_cents,
       p_discounted_value_cents: amount_cents,
-      p_discount_months: discount_months,
+      p_discount_months: applied_months,
       p_environment: ENV,
     });
     if (wErr) {
@@ -373,9 +389,12 @@ Deno.serve(async (req) => {
     // Do voucher, aceito ou nao aplicado por perder para o lancamento.
     discount_percent,
     discount_months,
-    // (v5) O que de fato entrou no preco.
+    // (v5) O que de fato entrou no preco. (v6) applied_months = por quantas
+    // cobrancas mensais ele vale; null = enquanto a assinatura durar.
     applied_discount_percent: applied_percent,
+    applied_discount_months: applied_months,
     discount_source: applied_source,
     launch_discount_percent: launch_percent,
+    launch_discount_months: launch_months,
   });
 });

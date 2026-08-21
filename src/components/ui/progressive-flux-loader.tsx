@@ -1,7 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { AnimatePresence, motion, useReducedMotion, type Transition } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useInView,
+  useReducedMotion,
+  type Transition,
+} from "framer-motion";
 
 import { cn } from "@/lib/utils";
 
@@ -30,12 +36,13 @@ export interface ProgressiveFluxLoaderProps {
   /** Show the animated phase label above the bar. Default `true`. */
   showLabel?: boolean;
   /**
-   * Sweep a faint sheen across the empty part of the track. Off by default,
-   * because a loader is never at rest for long. Turn it on when the bar can sit
-   * near zero for a while (a seat counter, a quota) — otherwise a `0%` bar is
-   * an empty tube that reads as broken rather than as "nothing yet".
+   * CSS background for the empty part of the track. Defaults to the theme's
+   * `muted`. Pass a dimmed version of the fill to get an "unlit tube" that the
+   * fill lights up — worth it when the bar can sit near zero for a while (a
+   * seat counter, a quota), where a neutral track reads as broken rather than
+   * as "nothing yet".
    */
-  idleSheen?: boolean;
+  trackBackground?: string;
   /**
    * CSS background for the bar fill. Defaults to the signature vivid blue → cyan
    * flux gradient. Pass any CSS background to replace it, or recolor the default
@@ -85,25 +92,37 @@ const FLUX_MID = `color-mix(in oklab, ${FLUX_FROM}, ${FLUX_TO})`;
 
 const DEFAULT_GRADIENT = `linear-gradient(90deg, ${FLUX_FROM} 0%, ${FLUX_MID} 35%, ${FLUX_TO} 55%, ${FLUX_MID} 78%, ${FLUX_FROM} 100%)`;
 
-// Colored glow drawn from the same flux palette, a white top-edge highlight,
-// and a deep-blue inset for depth.
-const BAR_SHADOW = `0 0 18px color-mix(in oklab, ${FLUX_FROM} 55%, transparent), 0 0 32px color-mix(in oklab, ${FLUX_TO} 40%, transparent), inset 0 1.5px 0 rgba(255, 255, 255, 0.5), inset 0 -2px 3px rgba(0, 40, 120, 0.35)`;
+// Colored glow drawn from the same flux palette, plus a deep-blue inset for
+// depth.
+//
+// O brilho branco de topo do original (`inset 0 1.5px 0 rgba(255,255,255,.5)`)
+// saiu: numa barra `rounded-full` esse traço acompanha o raio das pontas e se
+// acumula na quina esquerda, aparecendo como um ponto branco solto sobre o
+// fundo escuro. A profundidade fica por conta do inset azul de baixo.
+const BAR_SHADOW = `0 0 18px color-mix(in oklab, ${FLUX_FROM} 55%, transparent), 0 0 32px color-mix(in oklab, ${FLUX_TO} 40%, transparent), inset 0 -2px 3px rgba(0, 40, 120, 0.35)`;
 
 // White sweep over the colored fill (blended with `screen`), so the highlight
 // reads as a bright glide regardless of theme.
 const SHEEN_GRADIENT =
   "linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.55) 50%, transparent 100%)";
 
-// Sheen do trilho vazio (`idleSheen`): tem a cor do preenchimento, não o branco
-// do sheen de cima, para ler como "esta barra é azul e ainda não encheu" em vez
-// de um segundo brilho disputando atenção com o fill.
-const IDLE_SHEEN_GRADIENT = `linear-gradient(90deg, transparent 0%, color-mix(in oklab, ${FLUX_TO} 22%, transparent) 50%, transparent 100%)`;
+// Trilho apagado sugerido para `trackBackground`: o mesmo gradiente do
+// preenchimento, rebaixado. A barra já é azul no 0%; o fill só a acende.
+export const DIMMED_TRACK = `linear-gradient(90deg, color-mix(in oklab, ${FLUX_FROM} 16%, transparent) 0%, color-mix(in oklab, ${FLUX_TO} 20%, transparent) 55%, color-mix(in oklab, ${FLUX_FROM} 16%, transparent) 100%)`;
 
 const Z_TRANSITION: Transition = { duration: 0.9, ease: [0.22, 1, 0.36, 1] };
 const LETTER_TRANSITION: Transition = {
   duration: 0.45,
   ease: [0.22, 1, 0.36, 1],
 };
+// Respiro entre uma volta e outra do sweep, no modo não controlado.
+const SWEEP_RESTART_MS = 700;
+
+/* Alvo do sweep, criado uma vez só. Um objeto novo a cada render faria o
+   framer-motion entender "alvo mudou" e recomeçar a animação do zero na troca
+   de fase — a barra engasgaria no meio da volta. */
+const SWEEP_KEYFRAMES = { width: ["0%", "100%"] };
+
 const FILL_TRANSITION: Transition = { duration: 0.55, ease: [0.22, 1, 0.36, 1] };
 const FILL_TRANSITION_REDUCED: Transition = { duration: 0 };
 const EXIT_TRANSITION: Transition = { duration: 0.45, ease: [0.7, 0, 0.84, 0] };
@@ -193,7 +212,7 @@ export function ProgressiveFluxLoader({
   duration = 12,
   loop = true,
   showLabel = true,
-  idleSheen = false,
+  trackBackground,
   gradient = DEFAULT_GRADIENT,
   onComplete,
   ariaLabel = "Loading",
@@ -215,42 +234,51 @@ export function ProgressiveFluxLoader({
 
   const completedRef = React.useRef(false);
 
-  // Uncontrolled self-run sweep.
+  // Nada anima fora da tela: um loader abaixo da dobra girando o tempo todo
+  // custa quadro a quadro sem ninguém ver. A margem começa um pouco antes de
+  // entrar, para a animação já estar em curso quando aparece.
+  const rootRef = React.useRef<HTMLDivElement>(null);
+  const inView = useInView(rootRef, { margin: "200px" });
+
+  const sortedPhases = React.useMemo(() => [...phases].sort((a, b) => a.at - b.at), [phases]);
+  const sweepMs = Math.max(500, duration * 1000);
+
+  /**
+   * Sweep próprio (modo não controlado).
+   *
+   * O preenchimento é animado por keyframes lá embaixo — quem desenha é o
+   * framer-motion, sem passar por React. Aqui só marcamos a troca de FASE, com
+   * um timer por limiar: são cinco re-renders por volta em vez de um por
+   * quadro. A versão anterior fazia setState a 60 fps e travava a página
+   * inteira, porque cada quadro re-renderizava a árvore e reprogramava a
+   * animação de largura.
+   */
   React.useEffect(() => {
-    if (isControlled) return;
-    let raf = 0;
-    let timer = 0;
-    let start: number | null = null;
-    const totalMs = Math.max(500, duration * 1000);
+    if (isControlled || !inView) return;
+    const timers: number[] = [];
 
-    const tick = (ts: number) => {
-      if (start === null) start = ts;
-      const pct = Math.min(100, ((ts - start) / totalMs) * 100);
-      setInternal(pct);
-      if (pct >= 100) {
-        if (!completedRef.current) {
-          completedRef.current = true;
-          onCompleteRef.current?.();
-        }
-        if (loop) {
-          start = null;
-          completedRef.current = false;
-          timer = window.setTimeout(() => {
-            setInternal(0);
-            raf = requestAnimationFrame(tick);
-          }, 700);
-        }
-        return;
+    const volta = () => {
+      setInternal(0);
+      completedRef.current = false;
+      for (const phase of sortedPhases) {
+        if (phase.at <= 0 || phase.at >= 100) continue;
+        timers.push(window.setTimeout(() => setInternal(phase.at), (phase.at / 100) * sweepMs));
       }
-      raf = requestAnimationFrame(tick);
+      timers.push(
+        window.setTimeout(() => {
+          setInternal(100);
+          if (!completedRef.current) {
+            completedRef.current = true;
+            onCompleteRef.current?.();
+          }
+          if (loop) timers.push(window.setTimeout(volta, SWEEP_RESTART_MS));
+        }, sweepMs),
+      );
     };
 
-    raf = requestAnimationFrame(tick);
-    return () => {
-      cancelAnimationFrame(raf);
-      clearTimeout(timer);
-    };
-  }, [isControlled, duration, loop]);
+    volta();
+    return () => timers.forEach(clearTimeout);
+  }, [isControlled, inView, loop, sweepMs, sortedPhases]);
 
   const raw = isControlled ? value! : internal;
   const current = Number.isFinite(raw) ? Math.min(100, Math.max(0, raw)) : 0;
@@ -266,12 +294,24 @@ export function ProgressiveFluxLoader({
     }
   }, [isControlled, current]);
 
-  const sortedPhases = React.useMemo(() => [...phases].sort((a, b) => a.at - b.at), [phases]);
   const label = React.useMemo(() => pickLabel(current, sortedPhases), [current, sortedPhases]);
   const rounded = Math.round(current);
 
+  // Quem desenha o sweep: keyframes do framer-motion, fora do ciclo do React.
+  const varrendo = !isControlled && !reduced && inView;
+  const sweepTransition = React.useMemo<Transition>(
+    () => ({
+      duration: sweepMs / 1000,
+      ease: "linear",
+      repeat: loop ? Infinity : 0,
+      repeatDelay: SWEEP_RESTART_MS / 1000,
+    }),
+    [sweepMs, loop],
+  );
+
   return (
     <div
+      ref={rootRef}
       style={style}
       className={cn("mx-auto flex w-full max-w-md flex-col items-center gap-8", className)}
     >
@@ -294,27 +334,25 @@ export function ProgressiveFluxLoader({
         aria-valuemax={100}
         aria-valuenow={rounded}
         aria-valuetext={label ? `${rounded}% – ${label}` : `${rounded}%`}
+        style={trackBackground ? { background: trackBackground } : undefined}
         aria-label={ariaLabel}
       >
-        {/* Fica ATRÁS do preenchimento (sem z-index, vem antes no fluxo), então
-            no 0% ele é a única coisa que se move e no 100% some por baixo. */}
-        {idleSheen && !reduced && (
-          <motion.span
-            aria-hidden
-            className="pointer-events-none absolute inset-y-0 left-0 w-1/3"
-            style={{ background: IDLE_SHEEN_GRADIENT }}
-            animate={{ x: ["-100%", "320%"] }}
-            transition={{ duration: 2.8, ease: "linear", repeat: Infinity, repeatDelay: 0.6 }}
-          />
-        )}
         <motion.div
-          className="relative h-full rounded-full"
+          /* overflow-hidden prende o sheen ao preenchimento. Sem ele quem
+             recorta é o trilho, que tem a largura toda — então o brilho passava
+             do azul e seguia deslizando sobre a parte apagada. Não afeta o
+             glow: box-shadow externo é desenhado fora da caixa e overflow não
+             mexe nele. */
+          className="relative h-full overflow-hidden rounded-full"
           style={{ background: gradient, boxShadow: BAR_SHADOW }}
           initial={false}
-          animate={{ width: `${current}%` }}
-          transition={reduced ? FILL_TRANSITION_REDUCED : FILL_TRANSITION}
+          animate={varrendo ? SWEEP_KEYFRAMES : { width: `${current}%` }}
+          transition={
+            varrendo ? sweepTransition : reduced ? FILL_TRANSITION_REDUCED : FILL_TRANSITION
+          }
         >
-          {!reduced && (
+          {/* Também pausa fora da tela: é uma animação infinita. */}
+          {!reduced && inView && (
             <motion.span
               aria-hidden
               className="pointer-events-none absolute inset-y-0 left-0 w-1/2 rounded-full"

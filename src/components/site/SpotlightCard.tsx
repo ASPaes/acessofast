@@ -6,13 +6,33 @@ import { cn } from "@/lib/utils";
  * coordenadas próprias. Como é o mesmo ponto convertido para vários sistemas,
  * a luz continua de um card para o vizinho em vez de recomeçar em cada borda.
  */
-function trackSpotlight(event: PointerEvent<HTMLDivElement>) {
-  const cards = event.currentTarget.querySelectorAll<HTMLElement>("[data-spotlight]");
+/* pointermove dispara muito mais que 60x por segundo, e cada volta lê o rect de
+   todos os cards — leitura que força o navegador a recalcular layout no meio do
+   movimento do mouse. Então guardamos só a última posição e aplicamos uma vez
+   por quadro, que é a taxa em que a tela realmente muda. */
+let pendingFrame = 0;
+let pendingHost: HTMLElement | null = null;
+let pendingX = 0;
+let pendingY = 0;
+
+function applySpotlight() {
+  pendingFrame = 0;
+  const host = pendingHost;
+  if (!host) return;
+  const cards = host.querySelectorAll<HTMLElement>("[data-spotlight]");
   cards.forEach((card) => {
     const rect = card.getBoundingClientRect();
-    card.style.setProperty("--spot-x", `${event.clientX - rect.left}px`);
-    card.style.setProperty("--spot-y", `${event.clientY - rect.top}px`);
+    card.style.setProperty("--spot-x", `${pendingX - rect.left}px`);
+    card.style.setProperty("--spot-y", `${pendingY - rect.top}px`);
   });
+}
+
+function trackSpotlight(event: PointerEvent<HTMLDivElement>) {
+  pendingHost = event.currentTarget;
+  pendingX = event.clientX;
+  pendingY = event.clientY;
+  if (pendingFrame) return;
+  pendingFrame = requestAnimationFrame(applySpotlight);
 }
 
 /**

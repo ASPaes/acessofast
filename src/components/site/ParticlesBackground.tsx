@@ -28,6 +28,9 @@ const AREA_PER_PARTICLE = 16000;
 const MAX_PARTICLES = 140;
 const LINK_DISTANCE = 150;
 const LINK_ALPHA = 0.16;
+/* Faixas de opacidade das ligações: quantas mais, mais suave o degradê e mais
+   traços por quadro. 12 mantém o degradê imperceptível e o desenho em lote. */
+const LINK_BUCKETS = 12;
 const DOT_ALPHA = 0.72;
 const SPEED = 11; // px por segundo
 
@@ -54,6 +57,11 @@ export function ParticlesBackground() {
     let height = 0;
     let frame = 0;
     let lastTime = 0;
+
+    /* Reaproveitados quadro a quadro (só zeramos o comprimento) para não gerar
+       lixo novo 60 vezes por segundo. */
+    const linkBuckets: number[][] = Array.from({ length: LINK_BUCKETS }, () => []);
+    const realcados: Particle[] = [];
 
     const pointer = { x: 0, y: 0, active: false };
 
@@ -113,8 +121,15 @@ export function ParticlesBackground() {
         p.dy = p.y + p.oy;
       }
 
+      /* As ligações são agrupadas por faixa de opacidade e desenhadas em um
+         traço por faixa. Antes era um beginPath/stroke por PAR — em tela cheia
+         dá centenas de chamadas por quadro, e trocar strokeStyle no meio quebra
+         qualquer lote. Com 12 faixas o degradê continua contínuo a olho nu:
+         o passo é 0,16/12 ≈ 0,013 de alfa numa linha de 1px. */
       const maxDistSq = LINK_DISTANCE * LINK_DISTANCE;
       ctx.lineWidth = 1;
+      for (const faixa of linkBuckets) faixa.length = 0;
+
       for (let i = 0; i < particles.length; i++) {
         const a = particles[i];
         for (let j = i + 1; j < particles.length; j++) {
@@ -124,13 +139,22 @@ export function ParticlesBackground() {
           const distSq = dx * dx + dy * dy;
           if (distSq > maxDistSq) continue;
 
-          const alpha = (1 - Math.sqrt(distSq) / LINK_DISTANCE) * LINK_ALPHA;
-          ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
-          ctx.beginPath();
-          ctx.moveTo(a.dx, a.dy);
-          ctx.lineTo(b.dx, b.dy);
-          ctx.stroke();
+          const proximidade = 1 - Math.sqrt(distSq) / LINK_DISTANCE;
+          const faixa = Math.min(LINK_BUCKETS - 1, (proximidade * LINK_BUCKETS) | 0);
+          linkBuckets[faixa].push(a.dx, a.dy, b.dx, b.dy);
         }
+      }
+
+      for (let f = 0; f < LINK_BUCKETS; f++) {
+        const pontos = linkBuckets[f];
+        if (pontos.length === 0) continue;
+        ctx.strokeStyle = `rgba(255, 255, 255, ${((f + 0.5) / LINK_BUCKETS) * LINK_ALPHA})`;
+        ctx.beginPath();
+        for (let k = 0; k < pontos.length; k += 4) {
+          ctx.moveTo(pontos[k], pontos[k + 1]);
+          ctx.lineTo(pontos[k + 2], pontos[k + 3]);
+        }
+        ctx.stroke();
       }
 
       // Teia que sai do ponteiro, mais forte que as ligações normais.
@@ -151,16 +175,31 @@ export function ParticlesBackground() {
         }
       }
 
+      /* Mesma ideia nos pontos: um único path para todos os que estão no brilho
+         padrão (com o cursor parado, isso é o desenho inteiro em um fill só) e
+         fill individual apenas nos realçados pelo ponteiro. */
+      realcados.length = 0;
+      ctx.fillStyle = `rgba(255, 255, 255, ${DOT_ALPHA})`;
+      ctx.beginPath();
       for (const p of particles) {
-        let alpha = DOT_ALPHA;
         if (pointer.active) {
-          const dist = Math.hypot(p.dx - pointer.x, p.dy - pointer.y);
-          if (dist < CURSOR_LINK_DISTANCE) {
-            const boost = 1 - dist / CURSOR_LINK_DISTANCE;
-            alpha = DOT_ALPHA + (CURSOR_DOT_ALPHA - DOT_ALPHA) * boost;
+          const dx = p.dx - pointer.x;
+          const dy = p.dy - pointer.y;
+          if (dx * dx + dy * dy < CURSOR_LINK_DISTANCE * CURSOR_LINK_DISTANCE) {
+            realcados.push(p);
+            continue;
           }
         }
-        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+        // moveTo antes de cada arco: sem isso o path liga um ponto ao outro.
+        ctx.moveTo(p.dx + p.r, p.dy);
+        ctx.arc(p.dx, p.dy, p.r, 0, Math.PI * 2);
+      }
+      ctx.fill();
+
+      for (const p of realcados) {
+        const dist = Math.sqrt((p.dx - pointer.x) ** 2 + (p.dy - pointer.y) ** 2);
+        const boost = 1 - dist / CURSOR_LINK_DISTANCE;
+        ctx.fillStyle = `rgba(255, 255, 255, ${DOT_ALPHA + (CURSOR_DOT_ALPHA - DOT_ALPHA) * boost})`;
         ctx.beginPath();
         ctx.arc(p.dx, p.dy, p.r, 0, Math.PI * 2);
         ctx.fill();

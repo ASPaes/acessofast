@@ -220,10 +220,13 @@ function PlanCard({
               ? `Equivale a ${formatCents(cycleTotal)}/ano · em até 3x no cartão`
               : "Cobrança mensal, sem fidelidade"}
           </p>
+          {/* Ao lado do preço, o prazo importa mais que a contagem de vagas —
+              a escassez já está no bloco logo abaixo da grade. */}
           {perMonthBefore !== null && (
             <p className="mt-1 text-sm font-medium text-brand">
-              Preço de lançamento ·{" "}
-              {offer!.slots_left === 1 ? "última vaga" : `restam ${offer!.slots_left} vagas`}
+              {offer!.discount_months === null
+                ? "Preço de lançamento"
+                : `Preço de lançamento · ${offer!.discount_months} primeiros meses`}
             </p>
           )}
         </div>
@@ -390,9 +393,6 @@ export function Pricing({ onSelectPlan }: PricingProps) {
               </button>
             ))}
           </div>
-
-          {/* Some sozinho quando a oferta acaba ou as vagas se esgotam. */}
-          {offer && <LaunchOfferBar offer={offer} />}
         </div>
 
         {isPending ? (
@@ -450,6 +450,11 @@ export function Pricing({ onSelectPlan }: PricingProps) {
             ))}
           </SpotlightGroup>
         )}
+
+        {/* Depois da grade: os planos já foram lidos, e aqui a barra fecha com o
+            motivo de decidir agora. Some sozinha quando a oferta acaba ou as
+            vagas se esgotam. */}
+        {offer && !isPending && !isError && hasPlans && <LaunchOfferBar offer={offer} />}
       </div>
     </section>
   );

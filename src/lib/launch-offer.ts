@@ -12,6 +12,13 @@ export type LaunchOffer = {
   /** Ja combina "ligada" com "ainda tem vaga": true = pode aplicar o desconto. */
   is_active: boolean;
   discount_percent: number;
+  /**
+   * Meses de cobranca com o preco promocional no plano mensal; depois disso a
+   * assinatura volta ao preco de tabela (quem devolve e a janela criada pela
+   * create-checkout-prod). null = sem prazo. No anual nao se aplica: a cobranca
+   * unica ja cobre o periodo.
+   */
+  discount_months: number | null;
   slots_total: number;
   /** Limitado a slots_total pelo banco — a barra nunca passa de 100%. */
   slots_taken: number;

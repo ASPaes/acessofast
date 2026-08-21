@@ -761,6 +761,7 @@ export type Database = {
       launch_offer: {
         Row: {
           created_at: string
+          discount_months: number | null
           discount_percent: number
           id: boolean
           is_active: boolean
@@ -770,6 +771,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          discount_months?: number | null
           discount_percent?: number
           id?: boolean
           is_active?: boolean
@@ -779,6 +781,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          discount_months?: number | null
           discount_percent?: number
           id?: boolean
           is_active?: boolean
@@ -1943,6 +1946,7 @@ export type Database = {
         Returns: {
           is_active: boolean
           discount_percent: number
+          discount_months: number | null
           slots_total: number
           slots_taken: number
           slots_left: number
@@ -2116,6 +2120,8 @@ export type Database = {
       }
       set_launch_offer: {
         Args: {
+          p_clear_discount_months?: boolean
+          p_discount_months?: number
           p_discount_percent?: number
           p_is_active?: boolean
           p_manual_taken?: number
