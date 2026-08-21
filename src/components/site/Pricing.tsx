@@ -104,14 +104,21 @@ function planPrices(plan: Plan, billing: BillingCycle, offer: LaunchOffer | null
 /**
  * Desconto do anual sobre o mensal, em %. Usa o MENOR desconto entre os planos pagos
  * para não prometer no toggle mais do que algum plano entrega. null quando não há desconto.
+ *
+ * Compara os valores que o visitante VÊ (já com a oferta de lançamento), não os de
+ * tabela: é o selo dizendo quanto se economiza trocando o botão Mensal pelo Anual
+ * naquele momento. Na prática dá o mesmo número, porque a oferta derruba os dois
+ * lados na mesma proporção — mas se um dia o desconto passar a valer só para um
+ * ciclo, o selo acompanha em vez de mentir.
  */
-function annualDiscountPercent(plans: Plan[]): number | null {
+function annualDiscountPercent(plans: Plan[], offer: LaunchOffer | null): number | null {
   const rates: number[] = [];
   for (const plan of plans) {
-    const month = plan.price_month_cents;
-    const year = plan.price_year_cents;
-    if (plan.is_custom || month === null || year === null || month <= 0) continue;
-    const rate = 1 - year / 12 / month;
+    if (plan.is_custom) continue;
+    const mensal = planPrices(plan, "mensal", offer).perMonth;
+    const anual = planPrices(plan, "anual", offer).perMonth;
+    if (mensal === null || anual === null || mensal <= 0) continue;
+    const rate = 1 - anual / mensal;
     if (rate > 0) rates.push(rate);
   }
   if (rates.length === 0) return null;
@@ -298,7 +305,7 @@ export function Pricing({ onSelectPlan }: PricingProps) {
     view === "individual" ? p.code === "individual" : p.code !== "individual",
   );
   const hasPlans = visiblePlans.length > 0;
-  const annualDiscount = annualDiscountPercent(plans ?? []);
+  const annualDiscount = annualDiscountPercent(plans ?? [], offer);
 
   /* A pílula do toggle é medida a partir do botão ativo em vez de ter posições
      fixas: as opções têm larguras diferentes, e a do "Anual" ainda muda quando o
@@ -326,8 +333,9 @@ export function Pricing({ onSelectPlan }: PricingProps) {
     observer.observe(container);
     observer.observe(active);
     return () => observer.disconnect();
-    // annualDiscount entra porque o selo aparecendo muda a largura dos botões.
-  }, [view, annualDiscount]);
+    // annualDiscount e offer entram porque o selo aparecendo — e o "mais " que a
+    // oferta acrescenta a ele — mudam a largura dos botões.
+  }, [view, annualDiscount, offer]);
 
   return (
     <section id="preco" className="py-28">
@@ -372,6 +380,10 @@ export function Pricing({ onSelectPlan }: PricingProps) {
                 {/* Só como isca: com o Anual já selecionado o selo vira ruído dentro do botão ativo. */}
                 {v.value === "anual" && view !== "anual" && annualDiscount !== null && (
                   <span className="rounded-full bg-success/15 px-2 py-0.5 text-xs font-semibold text-success">
+                    {/* Com a oferta na tela, "mais" evita a leitura de que 17% e 30%
+                        são a mesma promoção disputando lugar: um desconto entra em
+                        cima do outro. Sem oferta, o "mais" não teria referência. */}
+                    {offer ? "mais " : ""}
                     {annualDiscount}% de desconto
                   </span>
                 )}
