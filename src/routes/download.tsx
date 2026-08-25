@@ -3,8 +3,8 @@ import { Download } from "lucide-react";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 
-export const Route = createFileRoute("/baixar")({
-  component: BaixarPage,
+export const Route = createFileRoute("/download")({
+  component: DownloadPage,
   head: () => ({
     meta: [
       { title: "Baixar o Acessofast — app de acesso remoto para Windows" },
@@ -32,7 +32,7 @@ const steps = [
   "Pronto — o atendimento começa com a sua autorização.",
 ];
 
-function BaixarPage() {
+function DownloadPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <Header />

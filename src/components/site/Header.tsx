@@ -46,7 +46,7 @@ export function Header() {
             </a>
           ))}
           <Link
-            to="/baixar"
+            to="/download"
             className="text-sm font-medium text-text-muted transition-colors hover:text-text"
           >
             Baixar
