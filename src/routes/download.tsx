@@ -17,14 +17,14 @@ export const Route = createFileRoute("/download")({
   }),
 });
 
-// URL FIXA, nunca "latest". O repo do agente publica dois tipos de release: os
-// automaticos do CI (so o binario do agente, que alimenta o auto-update da
-// frota) e os do instalador, publicados a mao. Enquanto este botao apontava
-// para /releases/latest/, cada build de CI movia o ponteiro para um release sem
-// instalador e o download virava 404 — foi o que aconteceu em 15/08/2026.
-// Ao publicar um instalador novo, troque esta constante de proposito.
+// Aponta para /releases/latest/: publicar um instalador novo (release vX.Y.Z
+// marcado como latest) ja atualiza o botao, sem mexer no site. So funciona
+// porque o build-agent.yml do repo do agente cria os releases de CI com
+// --latest=false. Antes disso, cada build do agente movia o ponteiro para um
+// release sem instalador e o download virava 404 — aconteceu em 15/08/2026.
+// Se o latest voltar a quebrar, e ali que se olha primeiro.
 const INSTALADOR_URL =
-  "https://github.com/ASPaes/acessofast-agent/releases/download/v3.1.0/AcessoFastSetup.exe";
+  "https://github.com/ASPaes/acessofast-agent/releases/latest/download/AcessoFastSetup.exe";
 
 const steps = [
   "Baixe e abra o instalador do Acessofast.",
