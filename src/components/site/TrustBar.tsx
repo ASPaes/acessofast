@@ -6,7 +6,7 @@ type ClientLogo = { name: string; src: string } | null;
 /* null = vaga ainda sem logo, renderiza o placeholder. */
 const CLIENT_LOGOS: ClientLogo[] = [
   { name: "ASP Softwares", src: "/logo-asp.png" },
-  null,
+  { name: "Delvale", src: "/logo-delvale.png" },
   null,
   null,
   null,

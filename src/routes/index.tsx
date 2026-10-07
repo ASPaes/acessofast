@@ -5,6 +5,7 @@ import { Header } from "@/components/site/Header";
 import { Hero } from "@/components/site/Hero";
 import { TrustBar } from "@/components/site/TrustBar";
 import { Features } from "@/components/site/Features";
+import { AppShowcase } from "@/components/site/AppShowcase";
 import { Differentiators } from "@/components/site/Differentiators";
 import { HowItWorks } from "@/components/site/HowItWorks";
 import { Pricing } from "@/components/site/Pricing";
@@ -43,6 +44,7 @@ function Index() {
         <Hero />
         <TrustBar />
         <Features />
+        <AppShowcase />
         <Differentiators />
         <HowItWorks />
         <Pricing
