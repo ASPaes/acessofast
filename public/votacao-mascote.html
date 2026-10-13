@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Nome do Mascote AcessoFast</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Onest:wght@400;500;600&family=Unbounded:wght@500;600&display=swap">
+<style>
+/* layout: palco preso à esquerda com o mascote e o crachá que mostra o nome em teste;
+   à direita a parcial (depois do voto) e a lista de nomes; a cédula é uma barra presa
+   embaixo. Um visual só, escuro, que é o do painel AcessoFast. */
+:root{
+  --bg:#060d18; --bg-2:#0a1324; --surface:#101e37; --line:#1a2c50; --line-strong:#2a4379;
+  --fg:#f7f9fc; --fg-2:#b2bed0; --fg-3:#909db3;
+  --accent:#2c67fa; --accent-hover:#1d54e0; --accent-light:#64a4ff; --accent-wash:rgba(44,103,250,.16);
+  --paper:#f3f6fb; --ink:#0b1220; --ink-soft:#5d6b85;
+  --ok:#31c48d; --err:#f05252;
+  --grid:rgba(100,164,255,.06); --shadow:rgba(0,0,0,.6);
+  --font-display:"Unbounded","Trebuchet MS",system-ui,sans-serif;
+  --font-body:"Onest",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1120px;margin-inline:auto;padding-inline:clamp(16px,4vw,40px);padding-block:clamp(28px,5vw,52px) 28px;display:flex;flex-direction:column;gap:clamp(24px,4vw,40px)}
+:focus-visible{outline:2px solid var(--accent-light);outline-offset:2px}
+.mono{font-family:var(--font-mono)}
+
+.top{display:flex;flex-direction:column;gap:12px}
+.eyebrow{margin:0;font-family:var(--font-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-light)}
+h1{margin:0;font-family:var(--font-display);font-weight:600;font-size:clamp(27px,4.4vw,44px);line-height:1.08;letter-spacing:-.02em;text-wrap:balance}
+.lede{margin:0;max-width:62ch;color:var(--fg-2);font-size:17px}
+
+.board{display:grid;grid-template-columns:minmax(0,340px) minmax(0,1fr);gap:clamp(18px,3vw,32px);align-items:start}
+.stage-col{position:sticky;top:calc(20px + env(safe-area-inset-top,0px));min-width:0}
+.stage{position:relative;border:1px solid var(--line);border-radius:24px;overflow:hidden;display:flex;flex-direction:column;align-items:center;padding:34px 16px 30px;
+  background:linear-gradient(var(--grid) 1px,transparent 1px) 0 0/32px 32px,linear-gradient(90deg,var(--grid) 1px,transparent 1px) 0 0/32px 32px,var(--bg-2)}
+.stage-state{position:absolute;top:13px;left:16px;font-family:var(--font-mono);font-size:11.5px;color:var(--fg-3)}
+
+/* mascote: o svg flutua dentro de .fl; a sombra fica no chão */
+.mascot{position:relative;display:block;aspect-ratio:1;width:min(100%,270px)}
+.mascot .fl{position:absolute;inset:0;display:block}
+.mascot svg{display:block;width:100%;height:100%;overflow:visible}
+.mascot::after{content:"";position:absolute;left:50%;top:84%;width:50%;height:7%;translate:-50% 0;border-radius:50%;background:radial-gradient(closest-side,var(--shadow),transparent)}
+
+/* crachá */
+.tag{position:relative;width:min(100%,250px);margin-top:-14px;rotate:-2.5deg;border-radius:14px;overflow:hidden;background:var(--paper);text-align:center;box-shadow:0 18px 40px -18px rgba(0,0,0,.85)}
+.tag-top{display:block;background:var(--accent);color:var(--fg);font-family:var(--font-mono);font-weight:500;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:7px 10px 6px}
+.tag-name{display:grid;place-items:center;min-height:62px;padding:8px 12px 10px;font-family:var(--font-display);font-weight:600;font-size:27px;line-height:1.1;letter-spacing:-.015em;color:var(--ink);overflow-wrap:anywhere}
+.tag-name.empty{font-family:var(--font-mono);font-weight:500;font-size:13.5px;letter-spacing:0;color:var(--ink-soft)}
+
+.main{display:flex;flex-direction:column;gap:20px;min-width:0}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+h2{margin:0;font-family:var(--font-mono);font-weight:500;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--fg-3)}
+.sec-note{font-family:var(--font-mono);font-size:12px;color:var(--fg-3);font-variant-numeric:tabular-nums}
+
+.names{display:flex;flex-direction:column;gap:12px;min-width:0}
+.list{display:flex;flex-direction:column;gap:8px}
+.row{appearance:none;font:inherit;color:inherit;text-align:left;cursor:pointer;background:var(--bg-2);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:3px 14px;align-items:start;min-width:0;transition:border-color .15s,background .15s,opacity .15s}
+.row:hover{border-color:var(--line-strong)}
+.row .box{grid-row:1 / span 2;width:24px;height:24px;margin-top:2px;border-radius:8px;border:1.5px solid var(--line-strong);display:grid;place-items:center;color:var(--fg)}
+.row .box svg{opacity:0}
+.row .head{display:flex;align-items:baseline;gap:2px 12px;flex-wrap:wrap;min-width:0}
+.row .nm{font-family:var(--font-display);font-weight:600;font-size:18px;line-height:1.3;letter-spacing:-.01em}
+.row .tema{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-light)}
+.row .why{color:var(--fg-2);font-size:14.5px;line-height:1.45}
+.row[aria-pressed="true"]{border-color:var(--accent);background:linear-gradient(180deg,#0f1f41,#0a1324 85%);box-shadow:inset 0 0 0 1px var(--accent)}
+.row[aria-pressed="true"] .box{background:var(--accent);border-color:var(--accent)}
+.row[aria-pressed="true"] .box svg{opacity:1}
+.list.full .row[aria-pressed="false"],.list.locked .row[aria-pressed="false"]{opacity:.5}
+.list.locked .row{cursor:default}
+.list.locked .row:hover{border-color:var(--line)}
+.list.locked .row[aria-pressed="true"]:hover{border-color:var(--accent)}
+
+.results{background:var(--bg-2);border:1px solid var(--line);border-radius:20px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.res-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+.res-list li{display:grid;grid-template-columns:minmax(0,104px) minmax(0,1fr) 2.2em;gap:12px;align-items:center;font-size:14.5px}
+.res-name{display:flex;align-items:center;gap:7px;min-width:0;font-weight:500;overflow-wrap:anywhere}
+.res-name i{flex:none;width:7px;height:7px;border-radius:50%;background:var(--ok)}
+.bar{display:block;height:10px;border-radius:999px;background:var(--line);overflow:hidden}
+.bar b{display:block;height:100%;border-radius:999px;background:var(--accent);transition:width .35s ease}
+.res-list li.lead .bar b{background:var(--accent-light)}
+.res-list li.lead .res-name{color:var(--fg)}
+.res-n{font-family:var(--font-mono);font-size:13px;text-align:right;color:var(--fg-2);font-variant-numeric:tabular-nums}
+.res-foot{margin:0;font-size:13.5px;color:var(--fg-3);display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.res-foot i{width:7px;height:7px;border-radius:50%;background:var(--ok)}
+
+/* cédula: barra presa embaixo */
+.ballot{position:sticky;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:5;background:var(--surface);border:1px solid var(--line-strong);border-radius:20px;padding:14px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;box-shadow:0 18px 50px -12px rgba(0,0,0,.8)}
+.b-info{flex:1 1 280px;min-width:0;display:flex;flex-direction:column;gap:6px}
+.b-line{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap}
+.b-count{font-family:var(--font-mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--fg-3);margin-right:4px;font-variant-numeric:tabular-nums}
+.chip{font-family:var(--font-display);font-weight:500;font-size:12.5px;color:var(--fg);background:var(--accent-wash);border:1px solid var(--accent);border-radius:999px;padding:3px 11px}
+.b-status{margin:0;font-size:14px;line-height:1.4;color:var(--fg-2)}
+.b-status.err{color:var(--err)}
+.b-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{appearance:none;font:inherit;font-weight:600;font-size:15px;border-radius:12px;padding:11px 18px;cursor:pointer;border:1px solid transparent}
+.btn.primary{color:var(--fg);background:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.ghost{color:var(--fg);background:transparent;border-color:var(--line-strong)}
+.btn.ghost:hover{border-color:var(--accent-light)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.primary:disabled:hover{background:var(--accent)}
+
+@media (max-width:820px){
+  .board{grid-template-columns:minmax(0,1fr)}
+  .stage-col{position:static}
+  .stage{padding:30px 16px 24px}
+  .mascot{width:min(100%,210px)}
+  .tag-name{font-size:24px;min-height:56px}
+  .b-actions{flex:1 1 100%}
+  .b-actions .btn{flex:1 1 auto}
+}
+
+@media (prefers-reduced-motion:no-preference){
+  .mascot .fl{animation:bob 3.8s ease-in-out infinite}
+  .mascot::after{animation:sh 3.8s ease-in-out infinite}
+  .mascot .blink{animation:blink 4.4s infinite;transform-box:fill-box;transform-origin:center}
+  .mascot .wave{animation:wave 1s ease-in-out infinite}
+  .mascot .d1,.mascot .d2,.mascot .d3{animation:dot 1.2s ease-in-out infinite}
+  .mascot .d2{animation-delay:.18s}.mascot .d3{animation-delay:.36s}
+  .mascot .tw{animation:tw 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+  .mascot .t2{animation-delay:.4s}.mascot .t3{animation-delay:.8s}
+}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.6%)}}
+@keyframes sh{0%,100%{scale:1;opacity:1}50%{scale:.88;opacity:.72}}
+@keyframes blink{0%,91%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}}
+@keyframes wave{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes dot{0%,100%{opacity:.35}40%{opacity:1}}
+@keyframes tw{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.55);opacity:.5}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow">AcessoFast · votação do mascote</p>
+    <h1>Como ele vai se chamar?</h1>
+    <p class="lede">O mascote do AcessoFast já tem cara, só falta o nome. A gente procura um que passe o que o app entrega: velocidade, harmonia e precisão. São 13 sugestões, cada uma com a sua história. Escolha até 3 favoritas e confirme o voto. Passe o mouse em um nome para ver como fica no crachá.</p>
+  </header>
+
+  <div class="board">
+    <aside class="stage-col" aria-label="Mascote">
+      <div class="stage">
+        <span class="stage-state" id="stageState">estado · conectando</span>
+        <span class="mascot" id="mascot"><span class="fl"></span></span>
+        <div class="tag">
+          <span class="tag-top">Olá, meu nome é</span>
+          <span class="tag-name empty" id="tagName">sem nome ainda</span>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main">
+      <section class="results" id="results" aria-labelledby="h-res" hidden>
+        <div class="sec-head"><h2 id="h-res">Parcial</h2><span class="sec-note" id="resCount"></span></div>
+        <ul class="res-list" id="resList"></ul>
+        <p class="res-foot" id="resFoot"></p>
+      </section>
+
+      <section class="names" aria-labelledby="h-names">
+        <div class="sec-head"><h2 id="h-names">Os 13 nomes</h2><span class="sec-note">o que cada um quer dizer</span></div>
+        <div class="list" id="list" role="group" aria-labelledby="h-names"></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="ballot" aria-label="Seu voto">
+    <div class="b-info">
+      <div class="b-line"><span class="b-count" id="bCount">0 de 3</span><span id="bChips" style="display:contents"></span></div>
+      <p class="b-status" id="bStatus" role="status">Conectando com a votação…</p>
+    </div>
+    <div class="b-actions">
+      <button type="button" class="btn ghost" id="btnAlt" hidden>Cancelar</button>
+      <button type="button" class="btn primary" id="btnMain" disabled>Confirmar voto</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+"use strict";
+const $ = (s, el = document) => el.querySelector(s);
+const MAX = 3;
+
+const NAMES = [
+  { id: "otto", name: "Otto", tema: "soa como remoto", why: "Rima com acesso remoto, então o nome já apresenta o produto quando alguém fala: Otto, do acesso remoto. É curto, tem duas sílabas e se lê igual de trás para frente, como uma conexão que funciona dos dois lados." },
+  { id: "telinha", name: "Telinha", tema: "a cara dele", why: "Sugestão do Claude. Ele é literalmente uma telinha, e é isso que o acesso remoto entrega: a tela de outro computador na sua, nítida e sem atraso. O diminutivo deixa o nome simpático e fácil de lembrar." },
+  { id: "turbo", name: "Turbo", tema: "velocidade", why: "O turbo é a peça que faz o motor render mais, e virou sinônimo de ir mais rápido. Também é o nome do filme Turbo, em que um caracol de jardim ganha supervelocidade e vai disputar as 500 Milhas de Indianápolis. É o lento que vira o mais rápido da pista." },
+  { id: "dox", name: "Dox", tema: "velocidade", why: "Abreviação de Deoxys Speed, a forma de velocidade do pokémon Deoxys. Com 180 de velocidade base, ele foi por muitos anos o mais rápido de toda a franquia. Com três letras, o nome também é rápido de falar e de digitar." },
+  { id: "frame", name: "Frame", tema: "fluidez e precisão", why: "Frame é cada quadro que a tela desenha. Quanto mais quadros por segundo (FPS), mais fluida fica a imagem, e é assim que se mede um bom acesso remoto: quadro a quadro, sem travar. Combina com ele, que é uma telinha." },
+  { id: "g", name: "G", tema: "garantia", why: "G de garantia: no nosso app a gente garante qualidade, segurança e velocidade. Funciona como o emblema de um super-herói, tipo o S do Superman. E G também é a unidade usada para medir aceleração, a força G." },
+  { id: "floco", name: "Floco", tema: "precisão que vira velocidade", why: "Cada floco de neve é leve e tem uma geometria precisa, sempre com seis pontas. Juntos, milhares deles formam a neve, e a neve forma a avalanche, que pode passar de 300 km/h e é uma das forças mais rápidas da natureza." },
+  { id: "leo", name: "Léo", tema: "velocidade da luz", why: "Leo é a constelação do Leão, onde fica a Zeta Leonis, uma estrela que dá para ver a olho nu. Estrelas emitem luz, e nada que conhecemos é mais rápido que ela: cerca de 300 mil km por segundo. De quebra, é nome de gente, fácil de chamar." },
+  { id: "lira", name: "Lira", tema: "velocidade e harmonia", why: "A lira foi criada por Hermes, o mensageiro de sandálias aladas e o deus mais veloz do Olimpo. Ele deu o instrumento a Apolo para fazer as pazes depois de roubar o gado dele, e ela virou o símbolo do deus da música. O nome junta velocidade e harmonia." },
+  { id: "fusa", name: "Fusa", tema: "precisão e harmonia", why: "Na partitura, a fusa é uma das notas mais rápidas: dura 1/32 de uma semibreve, então cabem 32 delas em um compasso 4/4. Tocar fusas exige precisão no tempo, e música lembra harmonia, com cada parte entrando na hora certa." },
+  { id: "bote", name: "Bote", tema: "agilidade e precisão", why: "O bote é o ataque da cobra, um dos movimentos mais rápidos do reino animal. Acontece em menos de um décimo de segundo, mais rápido que um piscar de olhos, e acerta o alvo. É uma palavra curta, direta e bem nossa." },
+  { id: "xaca", name: "Xáca", tema: "ritmo e agilidade", why: "Vem de Oaxaca, cidade mexicana. O México lembra o maracá, que marca o ritmo da música, e o som do maracá lembra o chocalho da cascavel, uma cobra de bote rápido e certeiro. É um nome curto e diferente de todos os outros." },
+  { id: "futon", name: "Futon", tema: "velocidade", why: "Fūton é o Estilo Vento de Naruto, o elemento do corte e da rapidez. É um dos elementos por trás do Estilo Rápido, a kekkei genkai que o vilão Hiruko usa para se mover tão depressa que quase some de vista." },
+];
+const BY_ID = Object.fromEntries(NAMES.map(n => [n.id, n]));
+const cleanPicks = v => Array.isArray(v) ? [...new Set(v.filter(x => typeof x === "string" && BY_ID[x]))].slice(0, MAX) : [];
+const listNames = ids => { const a = ids.map(i => BY_ID[i].name); return a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + " e " + a[a.length - 1]; };
+
+/* ---------- mascote (candidato B: corpo branco, olhos ovais, bochecha, formato padrão) ---------- */
+let seq = 0;
+const r = n => Math.round(n * 10) / 10;
+const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const mix = (a, b, t) => { const A = hex(a), B = hex(b); return "#" + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, "0")).join(""); };
+function smooth(pts) {
+  const n = pts.length, mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  const m = mid(pts[n - 1], pts[0]);
+  let d = "M" + r(m[0]) + " " + r(m[1]);
+  for (let i = 0; i < n; i++) { const p = pts[i], q = mid(p, pts[(i + 1) % n]); d += "Q" + r(p[0]) + " " + r(p[1]) + " " + r(q[0]) + " " + r(q[1]); }
+  return d + "Z";
+}
+function supPts(cx, cy, rx, ry, n) {
+  const N = 80, pts = [];
+  for (let i = 0; i < N; i++) {
+    const t = (i + .5) / N * 2 * Math.PI, c = Math.cos(t), s = Math.sin(t), e = 2 / n;
+    pts.push([cx + rx * Math.sign(c) * Math.abs(c) ** e, cy + ry * Math.sign(s) * Math.abs(s) ** e]);
+  }
+  return pts;
+}
+const BODY = { c: ["#ffffff", "#eef1f6", "#b4bfd2"], rim: "#42537d", tint: .8, hi: .78 };
+const STATE = {
+  parado: { label: "parado", color: null, eyes: "dots" },
+  ola: { label: "olá", color: null, eyes: "happy", extra: "hand" },
+  conectando: { label: "conectando", color: "#64a4ff", ink: "#082457", eyes: "look", bubble: "dots" },
+  aguardando: { label: "aguardando", color: "#f5b942", ink: "#3a2500", eyes: "dots", bubble: "q" },
+  erro: { label: "erro", color: "#f05252", ink: "#ffffff", eyes: "dash", bubble: "bang" },
+  concluido: { label: "concluído", color: "#31c48d", ink: "#04291c", eyes: "happy", bubble: "check", extra: "spark" },
+};
+const SHELL = smooth(supPts(120, 112, 78, 60, 4));
+const SCREEN = smooth(supPts(120, 109, 66, 45, 4.4));
+const FACE = { x: 120, y: 111, g: 25 };
+const HI = [[92, 59, 36, 7, 0], [166, 59, 12, 3.5, 6]];
+const BOX = [42, 52, 156, 146];
+
+function eyesSvg(type, col) {
+  const { x, y, g } = FACE, each = fn => fn(x - g) + fn(x + g);
+  const st = `fill="none" stroke="${col}" stroke-width="4.8" stroke-linecap="round" stroke-linejoin="round"`;
+  const dot = (dx, dy) => each(ex => `<ellipse cx="${r(ex + dx)}" cy="${r(y + dy)}" rx="6.6" ry="8.8" fill="${col}"/>`);
+  if (type === "happy") return each(ex => `<path d="M${ex - 8} ${y + 3}Q${ex} ${y - 10} ${ex + 8} ${y + 3}" ${st}/>`);
+  if (type === "dash") return each(ex => `<path d="M${ex - 7} ${y}H${ex + 7}" ${st}/>`);
+  if (type === "look") return dot(4, -1);
+  return dot(0, 0);
+}
+function icon(kind, c) {
+  if (kind === "dots") return `<circle class="d1" cx="-6.5" r="2.5" fill="${c}"/><circle class="d2" r="2.5" fill="${c}"/><circle class="d3" cx="6.5" r="2.5" fill="${c}"/>`;
+  if (kind === "q") return `<text y="6" text-anchor="middle" font-family="Onest,system-ui,sans-serif" font-weight="700" font-size="17" fill="${c}">?</text>`;
+  if (kind === "bang") return `<path d="M0-7.5V1.5" stroke="${c}" stroke-width="3.4" stroke-linecap="round"/><circle cy="7" r="2" fill="${c}"/>`;
+  return `<path d="M-6.5 .5-2 5 6.5-4.5" fill="none" stroke="${c}" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>`;
+}
+const star = (x, y, k, cls, c) => `<path class="tw ${cls}" d="M${x} ${y - k}Q${x} ${y} ${x + k} ${y}Q${x} ${y} ${x} ${y + k}Q${x} ${y} ${x - k} ${y}Q${x} ${y} ${x} ${y - k}Z" fill="${c}"/>`;
+
+function renderMascot(sid) {
+  const id = "m" + (seq++) + "_", st = STATE[sid], light = st.color || "#2c67fa";
+  const [bx, by, bw, bh] = BOX, f = FACE;
+  const full = `x="0" y="0" width="240" height="240"`;
+  const glowC = st.color || "#5f8cff", glowO = st.color ? .3 : .16;
+  const blink = st.eyes === "dots" || st.eyes === "look";
+  const shapes = `<path d="${SHELL}"/><rect x="110" y="164" width="20" height="26" rx="4"/><rect x="84" y="184" width="72" height="14" rx="7"/>`;
+  const defs =
+    `<radialGradient id="${id}g" gradientUnits="userSpaceOnUse" cx="${r(bx + .36 * bw)}" cy="${r(by + .2 * bh)}" r="${r(.95 * Math.max(bw, bh))}"><stop offset="0" stop-color="${BODY.c[0]}"/><stop offset=".5" stop-color="${BODY.c[1]}"/><stop offset="1" stop-color="${BODY.c[2]}"/></radialGradient>` +
+    (st.color ? `<linearGradient id="${id}t" gradientUnits="userSpaceOnUse" x1="0" y1="${r(by + .12 * bh)}" x2="0" y2="${r(by + bh)}"><stop offset="0" stop-color="${st.color}" stop-opacity="0"/><stop offset="1" stop-color="${st.color}" stop-opacity="${BODY.tint}"/></linearGradient>` : "") +
+    `<linearGradient id="${id}a" gradientUnits="userSpaceOnUse" x1="0" y1="${r(by + .5 * bh)}" x2="0" y2="${r(by + bh)}"><stop offset="0" stop-color="#060e22" stop-opacity="0"/><stop offset="1" stop-color="#060e22" stop-opacity=".28"/></linearGradient>` +
+    `<radialGradient id="${id}gl" gradientUnits="userSpaceOnUse" cx="120" cy="128" r="118"><stop offset="0" stop-color="${glowC}" stop-opacity="${glowO}"/><stop offset=".55" stop-color="${glowC}" stop-opacity="${r(glowO * 3.8) / 10}"/><stop offset="1" stop-color="${glowC}" stop-opacity="0"/></radialGradient>` +
+    `<radialGradient id="${id}hg" cx=".36" cy=".28" r=".85"><stop offset="0" stop-color="${BODY.c[0]}"/><stop offset=".55" stop-color="${BODY.c[1]}"/><stop offset="1" stop-color="${BODY.c[2]}"/></radialGradient>` +
+    `<linearGradient id="${id}scr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#12254f"/><stop offset="1" stop-color="#060d1c"/></linearGradient>` +
+    `<radialGradient id="${id}sg" cx=".5" cy="1.05" r=".9"><stop offset="0" stop-color="${light}" stop-opacity=".5"/><stop offset="1" stop-color="${light}" stop-opacity="0"/></radialGradient>` +
+    `<clipPath id="${id}sc"><path d="${SCREEN}"/></clipPath>` +
+    `<filter id="${id}b8" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="8"/></filter>` +
+    `<filter id="${id}b3" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3"/></filter>` +
+    `<filter id="${id}eb" filterUnits="userSpaceOnUse" ${full}><feGaussianBlur stdDeviation="7"/></filter>` +
+    `<filter id="${id}eg" filterUnits="userSpaceOnUse" ${full}><feDropShadow dx="0" dy="0" stdDeviation="3.2" flood-color="${light}" flood-opacity=".95"/></filter>` +
+    `<g id="${id}S">${shapes}</g>` +
+    `<mask id="${id}m" maskUnits="userSpaceOnUse" ${full}><use href="#${id}S" fill="#fff"/></mask>` +
+    `<mask id="${id}e" maskUnits="userSpaceOnUse" ${full}><rect ${full} fill="#fff"/><g filter="url(#${id}eb)"><use href="#${id}S" fill="#000"/></g></mask>`;
+  const over =
+    `<path d="${SCREEN}" fill="url(#${id}scr)"/><path d="${SCREEN}" fill="url(#${id}sg)"/>` +
+    `<g clip-path="url(#${id}sc)"><ellipse cx="86" cy="70" rx="52" ry="13" transform="rotate(-24 86 70)" fill="#fff" opacity=".07"/></g>` +
+    `<path d="${SCREEN}" fill="none" stroke="#040914" stroke-opacity=".55" stroke-width="1.5"/>` +
+    `<circle cx="120" cy="163" r="6" fill="${light}" opacity=".4" filter="url(#${id}b3)"/><circle cx="120" cy="163" r="2.7" fill="${light}"/>`;
+  const blush = [-1, 1].map(k => `<ellipse cx="${f.x + k * (f.g + 15)}" cy="${f.y + 11}" rx="10" ry="6" fill="#ff6f91" opacity=".5" filter="url(#${id}b3)"/>`).join("");
+  let extra = "";
+  if (st.bubble) extra += `<g transform="translate(200 50)"><circle r="15" fill="${st.color}" stroke="#060d18" stroke-width="3.5"/>${icon(st.bubble, st.ink)}</g>`;
+  if (st.extra === "hand") extra += `<g class="wave"><circle cx="214" cy="118" r="11.5" fill="url(#${id}hg)" stroke="${BODY.rim}" stroke-opacity=".3" stroke-width="1.2"/></g>`;
+  if (st.extra === "spark") { const c = mix(st.color, "#ffffff", .3); extra += star(38, 44, 9, "t1", c) + star(58, 27, 6, "t2", c) + star(33, 19, 4.5, "t3", c); }
+  return `<svg viewBox="8 16 224 224" role="img" aria-label="Mascote do AcessoFast, ${st.label}"><defs>${defs}</defs>` +
+    `<circle cx="120" cy="128" r="118" fill="url(#${id}gl)"/>` +
+    `<g mask="url(#${id}m)"><rect ${full} fill="url(#${id}g)"/>` +
+    (st.color ? `<rect ${full} fill="url(#${id}t)"/>` : "") +
+    `<rect ${full} fill="url(#${id}a)"/>` +
+    `<rect ${full} fill="${BODY.rim}" opacity=".45" mask="url(#${id}e)"/>` +
+    `<ellipse cx="${HI[0][0]}" cy="${HI[0][1]}" rx="${HI[0][2]}" ry="${HI[0][3]}" fill="#fff" opacity="${BODY.hi}" filter="url(#${id}b8)"/>` +
+    `<ellipse cx="${HI[1][0]}" cy="${HI[1][1]}" rx="${HI[1][2]}" ry="${HI[1][3]}" transform="rotate(${HI[1][4]} ${HI[1][0]} ${HI[1][1]})" fill="#fff" opacity="${r(BODY.hi + .12)}" filter="url(#${id}b3)"/></g>` +
+    over + blush +
+    `<g class="${blink ? "blink" : ""}" filter="url(#${id}eg)">${eyesSvg(st.eyes, "#eef4ff")}</g>` + extra + `</svg>`;
+}
+
+/* ---------- estado da página ---------- */
+const API = "https://plmfyibyrowbgjjyblcl.supabase.co/functions/v1/mascote-voto";
+const S = {
+  picks: [],          // seleção atual, na ordem em que foi marcada
+  mine: [],           // o que está salvo como voto deste aparelho
+  counts: null,       // votos por nome (só chega para quem já votou)
+  total: 0,           // quantos aparelhos votaram
+  mode: "loading",    // loading | vote
+  voted: false, editing: false, busy: false,
+  hover: null, hint: "", error: "", backup: [],
+};
+let shownState = "";
+
+// Sem login, quem vota é o navegador: este UUID identifica o voto deste aparelho.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function newId() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  const b = crypto.getRandomValues(new Uint8Array(16)); b[6] = b[6] & 15 | 64; b[8] = b[8] & 63 | 128;
+  const h = [...b].map(x => x.toString(16).padStart(2, "0")).join("");
+  return [h.slice(0, 8), h.slice(8, 12), h.slice(12, 16), h.slice(16, 20), h.slice(20)].join("-");
+}
+let device = null;
+try { device = localStorage.getItem("af-mascote-aparelho"); } catch (e) { /* sem armazenamento */ }
+if (!UUID_RE.test(device || "")) {
+  device = newId();
+  try { localStorage.setItem("af-mascote-aparelho", device); } catch (e) { /* sem armazenamento: o voto vale, só não dá para trocar depois */ }
+}
+try { S.picks = cleanPicks(JSON.parse(localStorage.getItem("af-nome-mascote") || "[]")); } catch (e) { /* sem armazenamento: começa vazio */ }
+const saveDraft = () => { try { localStorage.setItem("af-nome-mascote", JSON.stringify(S.picks)); } catch (e) { /* sem armazenamento */ } };
+const locked = () => S.busy || (S.voted && !S.editing);
+
+/* ---------- lista de nomes ---------- */
+const rows = {};
+NAMES.forEach(n => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "row"; b.id = "nome-" + n.id;
+  b.innerHTML = `<span class="box" aria-hidden="true"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M3 8.5 6.5 12 13 4.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="head"><span class="nm"></span><span class="tema"></span></span><span class="why"></span>`;
+  $(".nm", b).textContent = n.name;
+  $(".tema", b).textContent = n.tema;
+  $(".why", b).textContent = n.why;
+  b.addEventListener("click", () => toggle(n.id));
+  const on = () => { S.hover = n.id; drawStage(); }, off = () => { if (S.hover === n.id) { S.hover = null; drawStage(); } };
+  b.addEventListener("pointerenter", on); b.addEventListener("pointerleave", off);
+  b.addEventListener("focus", on); b.addEventListener("blur", off);
+  $("#list").appendChild(b);
+  rows[n.id] = b;
+});
+
+function toggle(id) {
+  if (S.busy) return;
+  if (locked()) { S.hint = "Para mudar, clique em Trocar meu voto."; drawBallot(); return; }
+  const i = S.picks.indexOf(id);
+  if (i >= 0) S.picks.splice(i, 1);
+  else if (S.picks.length >= MAX) { S.hint = "Já são 3. Tire um para colocar outro."; drawBallot(); return; }
+  else S.picks.push(id);
+  S.hint = ""; S.error = "";
+  saveDraft(); draw();
+}
+
+/* ---------- desenho ---------- */
+function mascotState() {
+  if (S.error) return "erro";
+  if (S.mode === "loading" || S.busy) return "conectando";
+  if (S.hover) return "ola";
+  if (S.voted && !S.editing) return "concluido";
+  return "parado";
+}
+function drawStage() {
+  const sid = mascotState();
+  if (sid !== shownState) {
+    shownState = sid;
+    $("#mascot").firstChild.innerHTML = renderMascot(sid);
+    $("#stageState").textContent = "estado · " + STATE[sid].label;
+  }
+  const show = S.hover || S.picks[S.picks.length - 1] || null, el = $("#tagName");
+  el.textContent = show ? BY_ID[show].name : "sem nome ainda";
+  el.classList.toggle("empty", !show);
+}
+function drawRows() {
+  const list = $("#list"), lock = locked();
+  list.classList.toggle("locked", lock);
+  list.classList.toggle("full", !lock && S.picks.length >= MAX);
+  NAMES.forEach(n => rows[n.id].setAttribute("aria-pressed", String(S.picks.includes(n.id))));
+}
+function drawBallot() {
+  const n = S.picks.length, main = $("#btnMain"), alt = $("#btnAlt"), status = $("#bStatus");
+  $("#bCount").textContent = n + " de " + MAX;
+  const chips = $("#bChips"); chips.textContent = "";
+  S.picks.forEach(id => { const c = document.createElement("span"); c.className = "chip"; c.textContent = BY_ID[id].name; chips.appendChild(c); });
+
+  let text = "", mainText = "Confirmar voto", mainOff = n === 0, altText = "";
+  if (S.mode === "loading") { text = "Conectando com a votação…"; mainOff = true; }
+  else if (S.busy) { text = "Salvando seu voto…"; mainOff = true; }
+  else if (S.voted && !S.editing) { text = "Voto registrado. Dá para trocar enquanto a votação estiver aberta."; mainText = "Trocar meu voto"; mainOff = false; }
+  else {
+    text = n === 0 ? "Escolha até 3 nomes." + (S.voted ? "" : " A parcial aparece depois do seu voto.")
+      : n < MAX ? "Dá para escolher mais " + (MAX - n) + ", ou confirmar assim." : "Pronto, 3 escolhidos. Agora é só confirmar.";
+    if (S.editing) { altText = "Cancelar"; mainText = "Salvar novo voto"; }
+  }
+  status.textContent = S.error || S.hint || text;
+  status.classList.toggle("err", !!S.error);
+  main.textContent = mainText; main.disabled = mainOff;
+  alt.hidden = !altText; if (altText) alt.textContent = altText;
+}
+function drawResults() {
+  const show = S.voted && !!S.counts;
+  const box = $("#results"); box.hidden = !show;
+  if (!show) return;
+  const k = id => Math.max(0, Math.floor(Number(S.counts[id]) || 0));
+  const top = Math.max(...NAMES.map(n => k(n.id))), max = Math.max(1, top), voters = S.total;
+  const order = NAMES.map((n, i) => ({ n, i, k: k(n.id) })).sort((a, b) => b.k - a.k || a.i - b.i);
+  $("#resCount").textContent = voters === 1 ? "1 voto registrado" : voters + " votos registrados";
+  const ul = $("#resList"); ul.textContent = "";
+  order.forEach(({ n, k }) => {
+    const li = document.createElement("li"); if (k > 0 && k === top) li.className = "lead";
+    const name = document.createElement("span"); name.className = "res-name";
+    if (S.mine.includes(n.id)) name.appendChild(document.createElement("i"));
+    name.appendChild(document.createTextNode(n.name));
+    const bar = document.createElement("span"); bar.className = "bar";
+    const fill = document.createElement("b"); fill.style.width = (k / max * 100) + "%"; bar.appendChild(fill);
+    const num = document.createElement("span"); num.className = "res-n"; num.textContent = k;
+    li.append(name, bar, num); ul.appendChild(li);
+  });
+  const foot = $("#resFoot"); foot.textContent = "";
+  foot.appendChild(document.createElement("i"));
+  foot.appendChild(document.createTextNode("seus votos. Cada pessoa conta até 3 nomes."));
+}
+function draw() { drawStage(); drawRows(); drawBallot(); drawResults(); }
+
+/* ---------- conversa com a votação ---------- */
+async function call(method, body) {
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 12000);
+  try {
+    const res = await fetch(body ? API : API + "?d=" + device, {
+      method, signal: ctl.signal, cache: "no-store",
+      headers: body ? { "Content-Type": "application/json" } : undefined,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    return { ok: res.ok, status: res.status, data: await res.json().catch(() => ({})) };
+  } finally { clearTimeout(timer); }
+}
+function apply(data) {
+  S.total = Math.max(0, Math.floor(Number(data.total) || 0));
+  S.counts = data.counts && typeof data.counts === "object" ? data.counts : null;
+  S.mine = cleanPicks(data.voted);
+  S.voted = S.mine.length > 0;
+  if (S.voted && !S.editing) S.picks = S.mine.slice();
+}
+async function load() {
+  try { const r = await call("GET"); if (r.ok) apply(r.data); } catch (e) { /* sem resposta: dá para tentar votar mesmo assim */ }
+  S.mode = "vote"; draw();
+}
+async function saveVote() {
+  S.busy = true; S.error = ""; S.hint = ""; draw();
+  let r = null;
+  try { r = await call("POST", { device, picks: S.picks }); } catch (e) { r = null; }
+  S.busy = false;
+  if (r && r.ok) { S.editing = false; apply(r.data); }
+  else if (r && r.status === 429) S.error = "Saíram muitos votos desta rede em pouco tempo. Espere alguns minutos e tente de novo.";
+  else S.error = "Não deu para salvar agora. Tente de novo em instantes.";
+  draw();
+}
+$("#btnMain").addEventListener("click", () => {
+  if (S.busy || S.mode === "loading") return;
+  if (S.voted && !S.editing) { S.editing = true; S.backup = S.picks.slice(); S.hint = ""; draw(); return; }
+  if (S.picks.length) saveVote();
+});
+$("#btnAlt").addEventListener("click", () => {
+  if (S.busy || !S.editing) return;
+  S.editing = false; S.picks = S.backup.slice(); S.hint = ""; S.error = ""; draw();
+});
+// Quem já votou vê a parcial andar sem recarregar.
+setInterval(async () => {
+  if (!S.voted || S.busy || S.editing || document.visibilityState !== "visible") return;
+  try { const r = await call("GET"); if (r.ok && !S.busy && !S.editing) { apply(r.data); draw(); } } catch (e) { /* tenta na próxima */ }
+}, 30000);
+
+draw();
+load();
+})();
+</script>
+</body>
+</html>
