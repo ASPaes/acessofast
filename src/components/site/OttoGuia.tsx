@@ -34,6 +34,7 @@ type Escolha =
   | "plano"
   | "baixar"
   | "historia"
+  | "quem"
   | "especialista"
   | "cliente"
   | "menu";
@@ -45,6 +46,7 @@ const ROTULO: Record<Escolha, string> = {
   plano: "Me ajuda a escolher o plano",
   baixar: "Baixar o AcessoFast",
   historia: "Como surgiu o AcessoFast?",
+  quem: "Quem é você?",
   especialista: "Falar com um especialista",
   cliente: "Já sou cliente",
   menu: "Outra coisa",
@@ -96,7 +98,7 @@ type Fala = { otto: OttoEstado; fala: string; opcoes?: Opcao[] };
 
 type Resposta = Fala & {
   /** Para onde o Otto leva depois de falar: uma seção da home ou uma página. */
-  destino?: { secao: string } | { rota: "/download" | "/como-surgiu" };
+  destino?: { secao: string } | { rota: "/download" | "/como-surgiu" | "/otto" };
   /** O que ele diz ao chegar na página de destino. */
   chegada?: Fala;
   /** O que ele diz se a pessoa já está na página de destino: não há para onde levar. */
@@ -111,7 +113,7 @@ const RESPOSTA: Record<Escolha, Resposta> = {
   "o-que-e": {
     otto: "atendendo",
     fala: "É acesso remoto para quem dá suporte de TI: você entra no computador do cliente e resolve na hora, sem sair do lugar. E sem surpresa no custo.",
-    opcoes: op("recursos", "precos", "historia", "menu"),
+    opcoes: op("recursos", "precos", "historia", "quem", "menu"),
   },
   recursos: {
     otto: "concluido",
@@ -156,6 +158,21 @@ const RESPOSTA: Record<Escolha, Resposta> = {
       opcoes: op("precos", "especialista", "menu"),
     },
   },
+  quem: {
+    otto: "ola",
+    fala: "Eu sou o Otto, o mascote do AcessoFast! Tenho uma página só minha, com as minhas caras e um curta. Vem ver!",
+    destino: { rota: "/otto" },
+    chegada: {
+      otto: "concluido",
+      fala: "Essa é a minha página! Dá o play no curta pra me conhecer melhor.",
+      opcoes: op("o-que-e", "menu"),
+    },
+    aqui: {
+      otto: "ola",
+      fala: "Você já está na minha página! Dá o play no curta pra me conhecer melhor.",
+      opcoes: op("o-que-e", "menu"),
+    },
+  },
   especialista: {
     otto: "concluido",
     fala: "Bora! Deixa seus dados no formulário e o time responde em até 1 dia útil.",
@@ -176,8 +193,9 @@ const RESPOSTA: Record<Escolha, Resposta> = {
 };
 
 /**
- * O que ele comenta quando a pessoa chega em cada seção da home (pelo id da
- * seção). O contato fica de fora: lá o Otto do formulário já conversa.
+ * O que ele comenta quando a pessoa chega em cada seção (pelo id da seção, em
+ * qualquer página: "otto" é a página dele). O contato fica de fora: lá o Otto do
+ * formulário já conversa.
  */
 const COMENTARIOS: Record<string, Fala> = {
   recursos: {
@@ -431,6 +449,8 @@ export function OttoGuia() {
     // A rolagem passa por várias seções: nada de comentar no caminho.
     silencioAte.current = Date.now() + SILENCIO_DEPOIS_DE_FALAR;
     if ("rota" in destino) {
+      // Na página dele, a apresentação é a fala de chegada; o comentário da seção sobraria.
+      if (destino.rota === "/otto") comentados.current.add("otto");
       void navigate({ to: destino.rota }).then(() => {
         if (r.chegada) falar(r.chegada);
       });

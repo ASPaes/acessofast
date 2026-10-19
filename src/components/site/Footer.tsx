@@ -48,6 +48,11 @@ export function Footer() {
                   Como surgiu
                 </a>
               </li>
+              <li>
+                <a href="/otto" className="hover:text-text">
+                  Conheça o Otto
+                </a>
+              </li>
             </ul>
           </div>
           <div>

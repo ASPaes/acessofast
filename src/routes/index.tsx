@@ -8,7 +8,6 @@ import { Features } from "@/components/site/Features";
 import { AppShowcase } from "@/components/site/AppShowcase";
 import { Differentiators } from "@/components/site/Differentiators";
 import { HowItWorks } from "@/components/site/HowItWorks";
-import { ConhecaOtto } from "@/components/site/ConhecaOtto";
 import { Pricing } from "@/components/site/Pricing";
 import { Faq } from "@/components/site/Faq";
 import { ContactSection } from "@/components/site/ContactSection";
@@ -48,7 +47,6 @@ function Index() {
         <AppShowcase />
         <Differentiators />
         <HowItWorks />
-        <ConhecaOtto />
         <Pricing
           onSelectPlan={(planCode, action, billingCycle) => {
             if (action === "contact") {

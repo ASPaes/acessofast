@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
+import { Route as OttoRouteImport } from './routes/otto'
 import { Route as ObrigadoRouteImport } from './routes/obrigado'
 import { Route as ExclusaoDeDadosRouteImport } from './routes/exclusao-de-dados'
 import { Route as DownloadRouteImport } from './routes/download'
@@ -19,6 +20,11 @@ import { Route as IndexRouteImport } from './routes/index'
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
   id: '/privacidade',
   path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OttoRoute = OttoRouteImport.update({
+  id: '/otto',
+  path: '/otto',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ObrigadoRoute = ObrigadoRouteImport.update({
@@ -53,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/download': typeof DownloadRoute
   '/exclusao-de-dados': typeof ExclusaoDeDadosRoute
   '/obrigado': typeof ObrigadoRoute
+  '/otto': typeof OttoRoute
   '/privacidade': typeof PrivacidadeRoute
 }
 export interface FileRoutesByTo {
@@ -61,6 +68,7 @@ export interface FileRoutesByTo {
   '/download': typeof DownloadRoute
   '/exclusao-de-dados': typeof ExclusaoDeDadosRoute
   '/obrigado': typeof ObrigadoRoute
+  '/otto': typeof OttoRoute
   '/privacidade': typeof PrivacidadeRoute
 }
 export interface FileRoutesById {
@@ -70,6 +78,7 @@ export interface FileRoutesById {
   '/download': typeof DownloadRoute
   '/exclusao-de-dados': typeof ExclusaoDeDadosRoute
   '/obrigado': typeof ObrigadoRoute
+  '/otto': typeof OttoRoute
   '/privacidade': typeof PrivacidadeRoute
 }
 export interface FileRouteTypes {
@@ -80,6 +89,7 @@ export interface FileRouteTypes {
     | '/download'
     | '/exclusao-de-dados'
     | '/obrigado'
+    | '/otto'
     | '/privacidade'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -88,6 +98,7 @@ export interface FileRouteTypes {
     | '/download'
     | '/exclusao-de-dados'
     | '/obrigado'
+    | '/otto'
     | '/privacidade'
   id:
     | '__root__'
@@ -96,6 +107,7 @@ export interface FileRouteTypes {
     | '/download'
     | '/exclusao-de-dados'
     | '/obrigado'
+    | '/otto'
     | '/privacidade'
   fileRoutesById: FileRoutesById
 }
@@ -105,6 +117,7 @@ export interface RootRouteChildren {
   DownloadRoute: typeof DownloadRoute
   ExclusaoDeDadosRoute: typeof ExclusaoDeDadosRoute
   ObrigadoRoute: typeof ObrigadoRoute
+  OttoRoute: typeof OttoRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
 }
 
@@ -115,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: '/privacidade'
       fullPath: '/privacidade'
       preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/otto': {
+      id: '/otto'
+      path: '/otto'
+      fullPath: '/otto'
+      preLoaderRoute: typeof OttoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/obrigado': {
@@ -161,6 +181,7 @@ const rootRouteChildren: RootRouteChildren = {
   DownloadRoute: DownloadRoute,
   ExclusaoDeDadosRoute: ExclusaoDeDadosRoute,
   ObrigadoRoute: ObrigadoRoute,
+  OttoRoute: OttoRoute,
   PrivacidadeRoute: PrivacidadeRoute,
 }
 export const routeTree = rootRouteImport

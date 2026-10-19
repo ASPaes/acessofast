@@ -35,7 +35,7 @@ export function Header() {
           />
           <span className="text-lg font-semibold tracking-tight text-text">AcessoFast</span>
         </a>
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden items-center gap-8 lg:flex">
           {nav.map((n) => (
             <a
               key={n.href}
