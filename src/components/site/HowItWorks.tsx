@@ -37,14 +37,20 @@ export function HowItWorks() {
         </div>
         <SpotlightGroup className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3">
           {steps.map((s) => (
-            <SpotlightCard key={s.n} className="bg-surface p-8">
-              <div className="flex items-start justify-between gap-4">
-                <span className="font-mono text-sm font-semibold text-accent-blue">{s.n}</span>
-                <Otto estado={s.otto} seguirMouse className="-mt-4 -mr-3 w-24" />
-              </div>
-              <h3 className="mt-1 text-xl font-semibold text-text">{s.title}</h3>
-              <p className="mt-2 text-[15px] leading-relaxed text-text-muted">{s.desc}</p>
-            </SpotlightCard>
+            // O Otto fica por cima do cartão, e não dentro: o efeito de luz reescreve
+            // variáveis de CSS no cartão a cada movimento do mouse, e tudo dentro dele
+            // teria o estilo recalculado junto — com o desenho do Otto, o site travava.
+            <div key={s.n} className="relative">
+              <SpotlightCard className="bg-surface p-8">
+                <div className="flex items-start justify-between gap-4">
+                  <span className="font-mono text-sm font-semibold text-accent-blue">{s.n}</span>
+                  <span aria-hidden className="-mt-4 -mr-3 block aspect-square w-24" />
+                </div>
+                <h3 className="mt-1 text-xl font-semibold text-text">{s.title}</h3>
+                <p className="mt-2 text-[15px] leading-relaxed text-text-muted">{s.desc}</p>
+              </SpotlightCard>
+              <Otto estado={s.otto} seguirMouse className="absolute top-[17px] right-[21px] w-24" />
+            </div>
           ))}
         </SpotlightGroup>
       </div>
