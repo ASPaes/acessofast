@@ -172,7 +172,7 @@ const RESPOSTA: Record<Escolha, Resposta> = {
     destino: { rota: "/android" },
     chegada: {
       otto: "concluido",
-      fala: "Chegamos! Toca em “Disponível no Google Play” para instalar. Ao abrir, o app mostra o ID e a senha para passar ao técnico.",
+      fala: "Chegamos! Toca em “Disponível no Google Play” para instalar. Ao abrir, o app mostra o ID do celular para passar ao técnico.",
       opcoes: op("menu"),
     },
     aqui: {
@@ -300,9 +300,14 @@ const COMENTARIOS: Record<string, Fala> = {
     opcoes: op("baixar-android", "menu"),
   },
   // /android
+  "android-uso": {
+    otto: "ola",
+    fala: "No mesmo app: o celular pode ser atendido, e o técnico acessa os computadores pelo celular. Testa ali no aparelho!",
+    opcoes: op("plano", "menu"),
+  },
   "android-passos": {
     otto: "atendendo",
-    fala: "No celular é assim: abriu o app, passou o ID e a senha, autorizou na tela. Pronto!",
+    fala: "No celular é assim: abriu o app, passou o ID, autorizou na tela. Pronto!",
     opcoes: op("baixar-windows", "menu"),
   },
   "android-seguranca": {

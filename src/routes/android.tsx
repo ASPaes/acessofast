@@ -1,10 +1,20 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, Hand, LockKeyhole, ShieldCheck, UserX } from "lucide-react";
+import {
+  ArrowRight,
+  Hand,
+  LockKeyhole,
+  Monitor,
+  ShieldCheck,
+  Smartphone,
+  UserX,
+} from "lucide-react";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
 import { BotaoGooglePlay } from "@/components/site/BotaoGooglePlay";
 import { SpotlightCard, SpotlightGroup } from "@/components/site/SpotlightCard";
 import { Otto } from "@/components/otto/otto";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/android")({
   component: AndroidPage,
@@ -14,29 +24,61 @@ export const Route = createFileRoute("/android")({
       {
         name: "description",
         content:
-          "Com o app AcessoFast para Android, o técnico atende o celular ou tablet à distância: vê a tela, toca e digita, com a autorização de quem está com o aparelho. Disponível no Google Play.",
+          "No app AcessoFast para Android, o celular ou tablet é atendido à distância, com a autorização de quem está com ele, e o técnico acessa os computadores da empresa pelo celular. Disponível no Google Play.",
       },
     ],
   }),
 });
 
-// Página do app Android. O que ela promete é o que a ficha da Google Play diz
-// (texto publicado em 08/10/2026): o app vai no aparelho que RECEBE o
-// atendimento; quem atende usa o AcessoFast no computador. Mudou a ficha,
-// mude aqui também — as duas não podem se contradizer.
+// Página do app Android. O que ela promete é o que o app publicado faz, no
+// mesmo desenho do protótipo abaixo e das imagens da ficha da Google Play
+// (08/10/2026): o celular pode ser atendido, e o técnico entra com a conta do
+// painel para acessar os computadores. Para ser atendido, o app mostra só o
+// ID: a senha é automática pelo painel, e quem vem de fora precisa da
+// aprovação de quem está com o celular. (A descrição longa da ficha ainda fala
+// em "ID e senha", do app de antes.) Mudou o app, mude aqui também.
+//
+// O celular do topo é o protótipo clicável do app (public/prototipo-android),
+// cópia de acessofast-desktop/prototipo-mobile no commit fb2d1e4 (08/10/2026),
+// o mesmo que gerou as imagens da ficha. Única mudança na cópia: noindex.
+
+const LADOS = {
+  atendido: {
+    rotulo: "Ser atendido",
+    src: "/prototipo-android/index.html?embed=1&cen=cliente&tab=celular&tema=escuro",
+  },
+  tecnico: {
+    rotulo: "Atender pelo celular",
+    src: "/prototipo-android/index.html?embed=1&cen=plano&tab=acessar&tema=escuro",
+  },
+} as const;
+type Lado = keyof typeof LADOS;
 
 const passos = [
-  "Instale o AcessoFast pelo Google Play e abra o app. Ele mostra um ID e uma senha de acesso.",
-  "No computador, o técnico usa o AcessoFast, disponível em acessofast.com.br/download.",
-  "Passe esse ID e essa senha para o técnico conectar.",
+  "Instale o AcessoFast pelo Google Play e abra o app. Ele mostra o ID deste celular.",
+  "No computador, o técnico usa o AcessoFast, disponível em acessofast.com.br/download, e conecta com esse ID.",
+  "Celular cadastrado no painel da empresa: o técnico entra direto, com a senha automática. Fora do painel, o pedido aparece no celular e só entra quem você aprovar.",
   "O Android pede autorização para compartilhar a tela. O atendimento só começa depois que você aceita.",
+];
+
+const doisLados = [
+  {
+    icon: Smartphone,
+    title: "Ser atendido",
+    desc: "O celular ou tablet recebe o suporte. Sem cadastro: o app mostra o ID do aparelho, o técnico conecta e o Android pede a sua autorização antes de começar.",
+  },
+  {
+    icon: Monitor,
+    title: "Atender pelo celular",
+    desc: "O técnico entra com a conta do painel e vê os computadores da empresa agrupados por cliente, com situação, marcadores e busca por nome, ID ou CNPJ. Conecta com um toque.",
+  },
 ];
 
 const garantias = [
   {
     icon: UserX,
-    title: "Sem cadastro no aparelho",
-    desc: "O app não tem login e não pede nome, e-mail ou telefone. A identificação é o ID do aparelho, e quem controla o acesso é a senha exibida na tela.",
+    title: "Sem cadastro para ser atendido",
+    desc: "Quem recebe o suporte não faz login nem informa nome, e-mail ou telefone. A identificação é o ID do aparelho. Os técnicos da empresa entram pela senha automática do painel; qualquer outra pessoa só entra se você aprovar na hora.",
   },
   {
     icon: Hand,
@@ -55,31 +97,46 @@ const garantias = [
   },
 ];
 
-/** Celular ilustrativo, na tela que o app mostra ao abrir: ID e senha. */
-function CelularIlustrativo() {
+/**
+ * O protótipo dentro de um celular. A tela do protótipo é desenhada em 390x844
+ * (um celular comum) e entra reduzida para caber na moldura, sem mudar nada
+ * nela: toque, rolagem e navegação funcionam como no app.
+ */
+function CelularComPrototipo() {
+  const [lado, setLado] = useState<Lado>("atendido");
   return (
-    <div className="relative w-[210px] shrink-0 rounded-[2.2rem] border border-border-strong bg-[#0b0f18] p-2.5 shadow-soft">
-      <div className="mx-auto mb-2 h-1.5 w-16 rounded-full bg-white/10" />
-      <div className="flex h-[360px] flex-col rounded-[1.6rem] border border-border bg-surface px-4 py-5 text-left">
-        <p className="text-sm font-semibold text-text">AcessoFast</p>
-        <p className="mt-1 inline-flex items-center gap-1.5 text-xs text-success">
-          <span className="h-1.5 w-1.5 rounded-full bg-success" />
-          Pronto para receber suporte
-        </p>
-        <div className="mt-8 rounded-xl border border-border bg-bg/60 p-3">
-          <p className="text-[11px] uppercase tracking-wide text-text-muted">Seu ID</p>
-          <p className="mt-1 font-mono text-lg font-semibold whitespace-nowrap text-text">
-            123 456 789
-          </p>
+    <div className="flex flex-col items-center gap-4">
+      <div className="rounded-[2.6rem] bg-[#05080e] p-[9px] shadow-[0_0_0_1.5px_#2a3448,0_40px_80px_-20px_rgba(0,0,0,0.8),0_0_120px_-20px_rgba(44,103,250,0.35)]">
+        <div className="relative h-[649px] w-[300px] overflow-hidden rounded-[2.1rem] bg-[#060d18]">
+          <iframe
+            key={lado}
+            src={LADOS[lado].src}
+            title={`Protótipo do app AcessoFast para Android: ${LADOS[lado].rotulo}`}
+            scrolling="no"
+            loading="lazy"
+            className="absolute top-0 left-0 h-[844px] w-[390px] origin-top-left scale-[0.76923] border-0"
+          />
         </div>
-        <div className="mt-3 rounded-xl border border-border bg-bg/60 p-3">
-          <p className="text-[11px] uppercase tracking-wide text-text-muted">Senha</p>
-          <p className="mt-1 font-mono text-xl font-semibold tracking-[0.2em] text-text">••••••</p>
-        </div>
-        <p className="mt-auto text-center text-xs leading-relaxed text-text-muted">
-          Passe esses dados para o técnico que vai te atender.
-        </p>
       </div>
+      <div className="inline-flex rounded-full border border-border bg-bg p-1" role="group">
+        {(Object.keys(LADOS) as Lado[]).map((l) => (
+          <button
+            key={l}
+            type="button"
+            onClick={() => setLado(l)}
+            aria-pressed={lado === l}
+            className={cn(
+              "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
+              lado === l ? "bg-primary text-primary-foreground" : "text-text-muted hover:text-text",
+            )}
+          >
+            {LADOS[l].rotulo}
+          </button>
+        ))}
+      </div>
+      <p className="text-xs text-text-faint">
+        Protótipo do app · toque para navegar. Dados ilustrativos.
+      </p>
     </div>
   );
 }
@@ -99,8 +156,9 @@ function AndroidPage() {
                 Suporte remoto também no celular.
               </h1>
               <p className="mt-6 max-w-xl text-pretty text-lg leading-relaxed text-text-muted">
-                Com o app AcessoFast para Android, o técnico atende o celular ou o tablet à
-                distância: vê a tela, toca e digita, com a autorização de quem está com o aparelho.
+                No app AcessoFast para Android, o celular ou tablet é atendido à distância, com a
+                autorização de quem está com ele. E o técnico acessa os computadores da empresa pelo
+                celular, entrando com a conta do painel.
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-4">
                 <BotaoGooglePlay />
@@ -110,21 +168,41 @@ function AndroidPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-center gap-3 sm:gap-5" aria-hidden>
-              <Otto
-                estado="conectando"
-                olhar={[1, 0.15]}
-                className="hidden w-24 sm:block sm:w-28"
-              />
-              <div className="relative hidden h-1 w-14 overflow-hidden rounded-full bg-white/5 sm:block sm:w-20">
-                <div className="otto-cena-fio absolute inset-0 rounded-full" />
+            <div className="flex items-center justify-center gap-5">
+              {/* O Otto conectando no celular, só onde sobra espaço ao lado dele. */}
+              <div className="hidden items-center gap-5 xl:flex" aria-hidden>
+                <Otto estado="conectando" olhar={[1, 0.15]} className="w-24" />
+                <div className="relative h-1 w-14 overflow-hidden rounded-full bg-white/5">
+                  <div className="otto-cena-fio absolute inset-0 rounded-full" />
+                </div>
               </div>
-              <CelularIlustrativo />
+              <CelularComPrototipo />
             </div>
           </div>
-          <p className="mx-auto mt-6 max-w-6xl px-6 text-right text-xs text-text-faint">
-            Tela ilustrativa.
-          </p>
+        </section>
+
+        <section id="android-uso" className="py-20">
+          <div className="mx-auto max-w-6xl px-6">
+            <div className="max-w-2xl">
+              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-primary">
+                Um app, dois lados
+              </p>
+              <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-text sm:text-5xl">
+                Para quem recebe o suporte e para quem atende.
+              </h2>
+            </div>
+            <SpotlightGroup className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2">
+              {doisLados.map(({ icon: Icon, title, desc }) => (
+                <SpotlightCard key={title} className="bg-surface p-8">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-soft">
+                    <Icon className="h-5 w-5" strokeWidth={1.75} />
+                  </div>
+                  <h3 className="mt-6 text-xl font-semibold tracking-tight text-text">{title}</h3>
+                  <p className="mt-2 text-[15px] leading-relaxed text-text-muted">{desc}</p>
+                </SpotlightCard>
+              ))}
+            </SpotlightGroup>
+          </div>
         </section>
 
         <section id="android-passos" className="py-20">
@@ -134,7 +212,7 @@ function AndroidPage() {
                 Como funciona
               </p>
               <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-text sm:text-5xl">
-                Do celular do cliente ao atendimento em quatro passos.
+                Para ser atendido pelo celular, quatro passos.
               </h2>
             </div>
             <ol className="mt-12 grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -150,30 +228,6 @@ function AndroidPage() {
                 </li>
               ))}
             </ol>
-          </div>
-        </section>
-
-        <section id="android-uso" className="py-20">
-          <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 px-6 lg:grid-cols-2">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-primary">
-                Para quem é
-              </p>
-              <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-text sm:text-5xl">
-                Para quem atende aparelhos Android à distância.
-              </h2>
-            </div>
-            <div className="space-y-4 text-lg leading-relaxed text-text-muted">
-              <p>
-                Ferramenta profissional para equipes de TI e prestadores de suporte: conferir uma
-                configuração, orientar um usuário, resolver um problema sem deslocamento.
-              </p>
-              <p>
-                O app vai no aparelho que <strong className="text-text">recebe</strong> o
-                atendimento. Quem atende usa o AcessoFast no computador, como em qualquer outro
-                atendimento.
-              </p>
-            </div>
           </div>
         </section>
 
@@ -204,7 +258,7 @@ function AndroidPage() {
         <section className="py-24">
           <div className="mx-auto flex max-w-4xl flex-col items-center gap-6 rounded-card border border-border bg-surface px-6 py-12 text-center shadow-soft sm:px-12">
             <h2 className="text-3xl font-extrabold tracking-tight text-text sm:text-4xl">
-              Baixe o app e comece a atender celulares.
+              Leve o AcessoFast no bolso.
             </h2>
             <p className="max-w-xl text-lg text-text-muted">
               O AcessoFast é contratado pela empresa no painel web. Não há compra dentro do app.
