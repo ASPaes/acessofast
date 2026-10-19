@@ -35,6 +35,8 @@ type Escolha =
   | "precos"
   | "plano"
   | "baixar"
+  | "baixar-windows"
+  | "baixar-android"
   | "historia"
   | "quem"
   | "especialista"
@@ -47,6 +49,8 @@ const ROTULO: Record<Escolha, string> = {
   precos: "Quanto custa?",
   plano: "Me ajuda a escolher o plano",
   baixar: "Baixar o AcessoFast",
+  "baixar-windows": "No computador (Windows)",
+  "baixar-android": "No celular (Android)",
   historia: "Como surgiu o AcessoFast?",
   quem: "Quem é você?",
   especialista: "Falar com um especialista",
@@ -112,7 +116,7 @@ type Fala = { otto: OttoEstado; fala: string; opcoes?: Opcao[] };
 
 type Resposta = Fala & {
   /** Para onde o Otto leva depois de falar: uma seção da home ou uma página. */
-  destino?: { secao: string } | { rota: "/download" | "/como-surgiu" | "/otto" };
+  destino?: { secao: string } | { rota: "/download" | "/android" | "/como-surgiu" | "/otto" };
   /** O que ele diz ao chegar na página de destino. */
   chegada?: Fala;
   /** O que ele diz se a pessoa já está na página de destino: não há para onde levar. */
@@ -147,13 +151,33 @@ const RESPOSTA: Record<Escolha, Resposta> = {
     opcoes: USUARIOS,
   },
   baixar: {
+    otto: "aguardando",
+    fala: "É pra já! Vai instalar no computador ou no celular?",
+    opcoes: op("baixar-windows", "baixar-android"),
+  },
+  "baixar-windows": {
     otto: "conectando",
-    fala: "É pra já! Vou abrir a página de download.",
+    fala: "Bora! Vou abrir a página de download.",
     destino: { rota: "/download" },
     chegada: { otto: "concluido", fala: `Chegamos! ${COMO_INSTALAR}`, opcoes: op("menu") },
     aqui: {
       otto: "concluido",
       fala: `Você já está no lugar certo! ${COMO_INSTALAR}`,
+      opcoes: op("menu"),
+    },
+  },
+  "baixar-android": {
+    otto: "conectando",
+    fala: "No celular é pelo Google Play. Vou te mostrar a página do app!",
+    destino: { rota: "/android" },
+    chegada: {
+      otto: "concluido",
+      fala: "Chegamos! Toca em “Disponível no Google Play” para instalar. Ao abrir, o app mostra o ID e a senha para passar ao técnico.",
+      opcoes: op("menu"),
+    },
+    aqui: {
+      otto: "concluido",
+      fala: "Você já está na página do app! Toca em “Disponível no Google Play” para instalar.",
       opcoes: op("menu"),
     },
   },
@@ -273,12 +297,27 @@ const COMENTARIOS: Record<string, Fala> = {
   download: {
     otto: "aguardando",
     fala: `Precisa de ajuda pra instalar? ${COMO_INSTALAR}`,
-    opcoes: op("menu"),
+    opcoes: op("baixar-android", "menu"),
+  },
+  // /android
+  "android-passos": {
+    otto: "atendendo",
+    fala: "No celular é assim: abriu o app, passou o ID e a senha, autorizou na tela. Pronto!",
+    opcoes: op("baixar-windows", "menu"),
+  },
+  "android-seguranca": {
+    otto: "concluido",
+    fala: "Nenhum atendimento começa sem a autorização de quem está com o celular. Pode ficar tranquilo.",
+    opcoes: op("precos", "menu"),
   },
 };
 
 /** Página para onde o Otto leva e cuja seção já é a fala de chegada dele. */
-const SECAO_DA_PAGINA: Record<string, string> = { "/otto": "otto", "/download": "download" };
+const SECAO_DA_PAGINA: Record<string, string> = {
+  "/otto": "otto",
+  "/download": "download",
+  "/android": "android-passos",
+};
 
 const CHAVE = "af-otto-guia";
 const ESPERA_ENTRADA = 900;

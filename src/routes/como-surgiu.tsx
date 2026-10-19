@@ -241,7 +241,16 @@ function ComoSurgiuPage() {
                     className={"h-8 w-8 " + (pronto ? "text-text" : "text-text-faint")}
                     strokeWidth={1.5}
                   />
-                  <p className="text-lg font-semibold text-text">{nome}</p>
+                  {nome === "Android" ? (
+                    <a
+                      href="/android"
+                      className="text-lg font-semibold text-text hover:text-primary"
+                    >
+                      {nome}
+                    </a>
+                  ) : (
+                    <p className="text-lg font-semibold text-text">{nome}</p>
+                  )}
                   <span
                     className={
                       "rounded-full px-2.5 py-0.5 text-xs font-medium " +

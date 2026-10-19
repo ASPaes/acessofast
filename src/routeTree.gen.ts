@@ -15,6 +15,7 @@ import { Route as ObrigadoRouteImport } from './routes/obrigado'
 import { Route as ExclusaoDeDadosRouteImport } from './routes/exclusao-de-dados'
 import { Route as DownloadRouteImport } from './routes/download'
 import { Route as ComoSurgiuRouteImport } from './routes/como-surgiu'
+import { Route as AndroidRouteImport } from './routes/android'
 import { Route as IndexRouteImport } from './routes/index'
 
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
@@ -47,6 +48,11 @@ const ComoSurgiuRoute = ComoSurgiuRouteImport.update({
   path: '/como-surgiu',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AndroidRoute = AndroidRouteImport.update({
+  id: '/android',
+  path: '/android',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -55,6 +61,7 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/android': typeof AndroidRoute
   '/como-surgiu': typeof ComoSurgiuRoute
   '/download': typeof DownloadRoute
   '/exclusao-de-dados': typeof ExclusaoDeDadosRoute
@@ -64,6 +71,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/android': typeof AndroidRoute
   '/como-surgiu': typeof ComoSurgiuRoute
   '/download': typeof DownloadRoute
   '/exclusao-de-dados': typeof ExclusaoDeDadosRoute
@@ -74,6 +82,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/android': typeof AndroidRoute
   '/como-surgiu': typeof ComoSurgiuRoute
   '/download': typeof DownloadRoute
   '/exclusao-de-dados': typeof ExclusaoDeDadosRoute
@@ -85,6 +94,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/android'
     | '/como-surgiu'
     | '/download'
     | '/exclusao-de-dados'
@@ -94,6 +104,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/android'
     | '/como-surgiu'
     | '/download'
     | '/exclusao-de-dados'
@@ -103,6 +114,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/android'
     | '/como-surgiu'
     | '/download'
     | '/exclusao-de-dados'
@@ -113,6 +125,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AndroidRoute: typeof AndroidRoute
   ComoSurgiuRoute: typeof ComoSurgiuRoute
   DownloadRoute: typeof DownloadRoute
   ExclusaoDeDadosRoute: typeof ExclusaoDeDadosRoute
@@ -165,6 +178,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ComoSurgiuRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/android': {
+      id: '/android'
+      path: '/android'
+      fullPath: '/android'
+      preLoaderRoute: typeof AndroidRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -177,6 +197,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AndroidRoute: AndroidRoute,
   ComoSurgiuRoute: ComoSurgiuRoute,
   DownloadRoute: DownloadRoute,
   ExclusaoDeDadosRoute: ExclusaoDeDadosRoute,

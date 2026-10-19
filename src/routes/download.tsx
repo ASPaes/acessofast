@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Download } from "lucide-react";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
+import { BotaoGooglePlay } from "@/components/site/BotaoGooglePlay";
 
 export const Route = createFileRoute("/download")({
   component: DownloadPage,
@@ -73,6 +74,20 @@ function DownloadPage() {
               </li>
             ))}
           </ol>
+
+          {/* Quem vai ser atendido no celular baixa pela loja, não por aqui. */}
+          <div className="mt-10 flex flex-col items-center gap-4 rounded-card border border-border bg-surface p-6 shadow-soft">
+            <p className="text-[15px] text-text">
+              Vai receber suporte no <strong>celular ou tablet Android</strong>?
+            </p>
+            <BotaoGooglePlay />
+            <Link
+              to="/android"
+              className="text-sm font-medium text-primary transition-colors hover:text-primary-hover"
+            >
+              Como funciona no celular
+            </Link>
+          </div>
 
           <div className="mt-10">
             <Link

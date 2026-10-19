@@ -53,6 +53,11 @@ export function Footer() {
                   Conheça o Otto
                 </a>
               </li>
+              <li>
+                <a href="/android" className="hover:text-text">
+                  App Android
+                </a>
+              </li>
             </ul>
           </div>
           <div>
