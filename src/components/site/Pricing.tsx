@@ -1,14 +1,21 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useQuery } from "@tanstack/react-query";
 import { Check } from "lucide-react";
 
-import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
 import { SpotlightCard, SpotlightGroup } from "@/components/site/SpotlightCard";
+import { Otto } from "@/components/otto/otto";
 import { LaunchOfferBar } from "@/components/site/LaunchOfferBar";
 import { useIsomorphicLayoutEffect } from "@/hooks/use-isomorphic-layout-effect";
 import { applyLaunchDiscount, fetchLaunchOffer, type LaunchOffer } from "@/lib/launch-offer";
+import {
+  buscarPlanos,
+  ouvirDestaquePlano,
+  PLANOS_COM_TESTE,
+  PLANOS_QUERY_KEY,
+  type Plan,
+} from "@/lib/planos";
+import { cn } from "@/lib/utils";
 
 /** Opções do toggle. "individual" é uma visão à parte, não um ciclo de cobrança. */
 type View = "mensal" | "anual" | "individual";
@@ -20,22 +27,6 @@ const VIEWS: { value: View; label: string }[] = [
   { value: "anual", label: "Anual" },
   { value: "individual", label: "Individual" },
 ];
-
-const PLAN_COLUMNS =
-  "code,name,price_month_cents,price_year_cents,max_users,max_concurrent_per_tech,is_custom,is_active,sort_order" as const;
-
-type Plan = Pick<
-  Database["public"]["Tables"]["plans"]["Row"],
-  | "code"
-  | "name"
-  | "price_month_cents"
-  | "price_year_cents"
-  | "max_users"
-  | "max_concurrent_per_tech"
-  | "is_custom"
-  | "is_active"
-  | "sort_order"
->;
 
 type PlanButton = { action: PlanAction; label: string; variant: "primary" | "secondary" };
 
@@ -147,7 +138,7 @@ function planButtons(plan: Plan): PlanButton[] {
   if (plan.code === "individual") {
     return [{ action: "free", label: "Criar conta grátis", variant: "primary" }];
   }
-  if (plan.code === "team" || plan.code === "business") {
+  if (PLANOS_COM_TESTE.includes(plan.code)) {
     return [
       { action: "trial", label: "Testar 7 dias grátis", variant: "secondary" },
       { action: "subscribe", label: "Assinar", variant: "primary" },
@@ -170,18 +161,25 @@ function PlanCard({
   billing,
   offer,
   onSelect,
+  indicado = false,
 }: {
   plan: Plan;
   billing: BillingCycle;
   offer: LaunchOffer | null;
   onSelect: (planCode: string, action: PlanAction) => void;
+  /** O plano que o Otto indicou na conversa: contorno e selo até a próxima indicação. */
+  indicado?: boolean;
 }) {
   const isFree = !plan.is_custom && plan.price_month_cents === 0;
   const { perMonth, cycleTotal, perMonthBefore } = planPrices(plan, billing, offer);
   const isRecommended = plan.code === RECOMMENDED_PLAN_CODE;
 
   return (
-    <SpotlightCard strong={isRecommended} className="flex flex-col bg-surface-2 p-6">
+    <SpotlightCard
+      strong={isRecommended}
+      wrapperClassName={cn("relative", indicado && "otto-destaque")}
+      className="flex flex-col bg-surface-2 p-6"
+    >
       {isRecommended && (
         <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-primary px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary-foreground shadow-soft">
           Recomendado
@@ -252,11 +250,18 @@ function PlanCard({
             type="button"
             onClick={() => onSelect(plan.code, b.action)}
             className={b.variant === "primary" ? primaryButtonClass : secondaryButtonClass}
+            data-otto-feliz
           >
             {b.label}
           </button>
         ))}
       </div>
+      {indicado && (
+        <span className="absolute -bottom-4 left-1/2 inline-flex -translate-x-1/2 items-center gap-1.5 whitespace-nowrap rounded-full border border-success/40 bg-bg py-0.5 pr-3 pl-1 text-xs font-semibold text-success shadow-soft">
+          <Otto estado="concluido" animado={false} className="w-7" />
+          Indicado pelo Otto
+        </span>
+      )}
     </SpotlightCard>
   );
 }
@@ -271,19 +276,29 @@ export function Pricing({ onSelectPlan }: PricingProps) {
     isPending,
     isError,
   } = useQuery({
-    queryKey: ["site", "plans"],
-    queryFn: async (): Promise<Plan[]> => {
-      const { data, error } = await supabase
-        .from("plans")
-        .select(PLAN_COLUMNS)
-        .eq("is_active", true)
-        .order("sort_order", { ascending: true });
-
-      if (error) throw error;
-      return data ?? [];
-    },
+    queryKey: PLANOS_QUERY_KEY,
+    queryFn: buscarPlanos,
     staleTime: 5 * 60 * 1000,
   });
+
+  /* Plano indicado pelo Otto. A grade vai para a visão onde ele aparece
+     (o Individual tem visão própria) e rola até o cartão. */
+  const [indicado, setIndicado] = useState<string | null>(null);
+  useEffect(() => {
+    const parar = ouvirDestaquePlano((code) => {
+      setView((v) => (code === "individual" ? "individual" : v === "individual" ? "anual" : v));
+      setIndicado(code);
+    });
+    return parar;
+  }, []);
+  useEffect(() => {
+    if (!indicado || !plans) return;
+    const cartao = document.querySelector<HTMLElement>(".otto-destaque");
+    if (cartao) {
+      const suave = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      cartao.scrollIntoView({ block: "center", behavior: suave ? "smooth" : "auto" });
+    }
+  }, [indicado, plans, view]);
 
   /* Oferta de lançamento. Fica em query separada de propósito: se ela falhar, a
      página cai no preço de tabela em vez de ficar sem preço nenhum. staleTime
@@ -433,6 +448,7 @@ export function Pricing({ onSelectPlan }: PricingProps) {
                   billing={billing}
                   offer={offer}
                   onSelect={handleSelect}
+                  indicado={p.code === indicado}
                 />
               ))}
             </SpotlightGroup>
@@ -446,6 +462,7 @@ export function Pricing({ onSelectPlan }: PricingProps) {
                 billing={billing}
                 offer={offer}
                 onSelect={handleSelect}
+                indicado={p.code === indicado}
               />
             ))}
           </SpotlightGroup>

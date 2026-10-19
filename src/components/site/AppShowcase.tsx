@@ -1,4 +1,4 @@
-import { DesktopDemo } from "@/components/site/desktop-demo/DesktopDemo";
+import { PrototipoDesktop } from "@/components/site/PrototipoDesktop";
 
 export function AppShowcase() {
   return (
@@ -15,10 +15,11 @@ export function AppShowcase() {
           </p>
         </div>
         <div className="mt-12">
-          <DesktopDemo />
+          <PrototipoDesktop />
         </div>
         <p className="mt-4 text-center text-xs text-text-faint">
-          Telas do app AcessoFast · clique nas abas para navegar. Dados ilustrativos.
+          Protótipo do app AcessoFast · clique à vontade: conecte num computador, abra os arquivos e
+          use o simulador embaixo da janela. Dados ilustrativos.
         </p>
       </div>
     </section>

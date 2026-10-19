@@ -43,6 +43,21 @@ export function Footer() {
                   FAQ
                 </a>
               </li>
+              <li>
+                <a href="/como-surgiu" className="hover:text-text">
+                  Como surgiu
+                </a>
+              </li>
+              <li>
+                <a href="/otto" className="hover:text-text">
+                  Conheça o Otto
+                </a>
+              </li>
+              <li>
+                <a href="/android" className="hover:text-text">
+                  App Android
+                </a>
+              </li>
             </ul>
           </div>
           <div>

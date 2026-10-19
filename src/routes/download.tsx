@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Download } from "lucide-react";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
+import { BotaoGooglePlay } from "@/components/site/BotaoGooglePlay";
 
 export const Route = createFileRoute("/download")({
   component: DownloadPage,
@@ -37,7 +38,7 @@ function DownloadPage() {
     <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex flex-1 items-center justify-center px-6 py-24">
-        <section className="mx-auto max-w-xl text-center">
+        <section id="download" className="mx-auto max-w-xl text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.14em] text-primary">
             Recebeu um pedido de suporte?
           </p>
@@ -51,6 +52,7 @@ function DownloadPage() {
 
           <a
             href={INSTALADOR_URL}
+            data-otto-feliz
             className="group mt-8 inline-flex h-14 items-center gap-3 rounded-btn bg-primary px-8 text-base font-semibold text-primary-foreground shadow-soft transition-all hover:bg-primary-hover hover:-translate-y-[1px]"
           >
             <Download className="h-5 w-5" strokeWidth={2} />
@@ -72,6 +74,20 @@ function DownloadPage() {
               </li>
             ))}
           </ol>
+
+          {/* Quem vai ser atendido no celular baixa pela loja, não por aqui. */}
+          <div className="mt-10 flex flex-col items-center gap-4 rounded-card border border-border bg-surface p-6 shadow-soft">
+            <p className="text-[15px] text-text">
+              Vai receber suporte no <strong>celular ou tablet Android</strong>?
+            </p>
+            <BotaoGooglePlay />
+            <Link
+              to="/android"
+              className="text-sm font-medium text-primary transition-colors hover:text-primary-hover"
+            >
+              Como funciona no celular
+            </Link>
+          </div>
 
           <div className="mt-10">
             <Link

@@ -10,14 +10,22 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PrivacidadeRouteImport } from './routes/privacidade'
+import { Route as OttoRouteImport } from './routes/otto'
 import { Route as ObrigadoRouteImport } from './routes/obrigado'
 import { Route as ExclusaoDeDadosRouteImport } from './routes/exclusao-de-dados'
 import { Route as DownloadRouteImport } from './routes/download'
+import { Route as ComoSurgiuRouteImport } from './routes/como-surgiu'
+import { Route as AndroidRouteImport } from './routes/android'
 import { Route as IndexRouteImport } from './routes/index'
 
 const PrivacidadeRoute = PrivacidadeRouteImport.update({
   id: '/privacidade',
   path: '/privacidade',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OttoRoute = OttoRouteImport.update({
+  id: '/otto',
+  path: '/otto',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ObrigadoRoute = ObrigadoRouteImport.update({
@@ -35,6 +43,16 @@ const DownloadRoute = DownloadRouteImport.update({
   path: '/download',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ComoSurgiuRoute = ComoSurgiuRouteImport.update({
+  id: '/como-surgiu',
+  path: '/como-surgiu',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AndroidRoute = AndroidRouteImport.update({
+  id: '/android',
+  path: '/android',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -43,50 +61,76 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/android': typeof AndroidRoute
+  '/como-surgiu': typeof ComoSurgiuRoute
   '/download': typeof DownloadRoute
   '/exclusao-de-dados': typeof ExclusaoDeDadosRoute
   '/obrigado': typeof ObrigadoRoute
+  '/otto': typeof OttoRoute
   '/privacidade': typeof PrivacidadeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/android': typeof AndroidRoute
+  '/como-surgiu': typeof ComoSurgiuRoute
   '/download': typeof DownloadRoute
   '/exclusao-de-dados': typeof ExclusaoDeDadosRoute
   '/obrigado': typeof ObrigadoRoute
+  '/otto': typeof OttoRoute
   '/privacidade': typeof PrivacidadeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/android': typeof AndroidRoute
+  '/como-surgiu': typeof ComoSurgiuRoute
   '/download': typeof DownloadRoute
   '/exclusao-de-dados': typeof ExclusaoDeDadosRoute
   '/obrigado': typeof ObrigadoRoute
+  '/otto': typeof OttoRoute
   '/privacidade': typeof PrivacidadeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/android'
+    | '/como-surgiu'
     | '/download'
     | '/exclusao-de-dados'
     | '/obrigado'
+    | '/otto'
     | '/privacidade'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/download' | '/exclusao-de-dados' | '/obrigado' | '/privacidade'
+  to:
+    | '/'
+    | '/android'
+    | '/como-surgiu'
+    | '/download'
+    | '/exclusao-de-dados'
+    | '/obrigado'
+    | '/otto'
+    | '/privacidade'
   id:
     | '__root__'
     | '/'
+    | '/android'
+    | '/como-surgiu'
     | '/download'
     | '/exclusao-de-dados'
     | '/obrigado'
+    | '/otto'
     | '/privacidade'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AndroidRoute: typeof AndroidRoute
+  ComoSurgiuRoute: typeof ComoSurgiuRoute
   DownloadRoute: typeof DownloadRoute
   ExclusaoDeDadosRoute: typeof ExclusaoDeDadosRoute
   ObrigadoRoute: typeof ObrigadoRoute
+  OttoRoute: typeof OttoRoute
   PrivacidadeRoute: typeof PrivacidadeRoute
 }
 
@@ -97,6 +141,13 @@ declare module '@tanstack/react-router' {
       path: '/privacidade'
       fullPath: '/privacidade'
       preLoaderRoute: typeof PrivacidadeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/otto': {
+      id: '/otto'
+      path: '/otto'
+      fullPath: '/otto'
+      preLoaderRoute: typeof OttoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/obrigado': {
@@ -120,6 +171,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DownloadRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/como-surgiu': {
+      id: '/como-surgiu'
+      path: '/como-surgiu'
+      fullPath: '/como-surgiu'
+      preLoaderRoute: typeof ComoSurgiuRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/android': {
+      id: '/android'
+      path: '/android'
+      fullPath: '/android'
+      preLoaderRoute: typeof AndroidRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -132,9 +197,12 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AndroidRoute: AndroidRoute,
+  ComoSurgiuRoute: ComoSurgiuRoute,
   DownloadRoute: DownloadRoute,
   ExclusaoDeDadosRoute: ExclusaoDeDadosRoute,
   ObrigadoRoute: ObrigadoRoute,
+  OttoRoute: OttoRoute,
   PrivacidadeRoute: PrivacidadeRoute,
 }
 export const routeTree = rootRouteImport

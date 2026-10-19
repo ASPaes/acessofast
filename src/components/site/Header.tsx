@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import logoAsset from "@/assets/acessofast-logo-real.png.asset.json";
+import { Otto } from "@/components/otto/otto";
 
 const nav = [
   { href: "/#recursos", label: "Recursos" },
   { href: "/#diferenciais", label: "Diferenciais" },
   { href: "/#preco", label: "Preço" },
-  { href: "/#faq", label: "FAQ" },
+  { href: "/#faq", label: "FAQ", soNoXl: true },
 ];
 
 export function Header() {
@@ -35,16 +36,39 @@ export function Header() {
           />
           <span className="text-lg font-semibold tracking-tight text-text">AcessoFast</span>
         </a>
-        <nav className="hidden items-center gap-8 md:flex">
+        {/* Oito links: no lg o espaço é contado, por isso o vão menor e o FAQ só a partir do xl. */}
+        <nav className="hidden items-center gap-6 lg:flex xl:gap-8">
           {nav.map((n) => (
             <a
               key={n.href}
               href={n.href}
-              className="text-sm font-medium text-text-muted transition-colors hover:text-text"
+              className={
+                "text-sm font-medium text-text-muted transition-colors hover:text-text" +
+                ("soNoXl" in n && n.soNoXl ? " hidden xl:inline" : "")
+              }
             >
               {n.label}
             </a>
           ))}
+          <Link
+            to="/como-surgiu"
+            className="text-sm font-medium text-text-muted transition-colors hover:text-text"
+          >
+            Como surgiu
+          </Link>
+          <Link
+            to="/otto"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-text-muted transition-colors hover:text-text"
+          >
+            <Otto estado="parado" animado={false} seguirMouse className="w-6" />
+            Otto
+          </Link>
+          <Link
+            to="/android"
+            className="text-sm font-medium text-text-muted transition-colors hover:text-text"
+          >
+            Android
+          </Link>
           <Link
             to="/download"
             className="text-sm font-medium text-text-muted transition-colors hover:text-text"
@@ -54,6 +78,7 @@ export function Header() {
         </nav>
         <a
           href="/#contato"
+          data-otto-feliz
           className="inline-flex h-10 items-center justify-center rounded-btn bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-soft transition-all hover:bg-primary-hover hover:-translate-y-[1px]"
         >
           Falar com especialista
