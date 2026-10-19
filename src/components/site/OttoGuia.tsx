@@ -14,13 +14,22 @@ import { cn } from "@/lib/utils";
 // conversa continua aberta, já com o próximo passo. Abre sozinho só na primeira
 // vez da sessão; fechado, fica no canto e reabre com um clique.
 
-type Escolha = "o-que-e" | "recursos" | "precos" | "baixar" | "especialista" | "cliente" | "menu";
+type Escolha =
+  | "o-que-e"
+  | "recursos"
+  | "precos"
+  | "baixar"
+  | "historia"
+  | "especialista"
+  | "cliente"
+  | "menu";
 
 const ROTULO: Record<Escolha, string> = {
   "o-que-e": "O que é o AcessoFast?",
   recursos: "Ver os recursos",
   precos: "Quanto custa?",
   baixar: "Baixar o AcessoFast",
+  historia: "Como surgiu o AcessoFast?",
   especialista: "Falar com um especialista",
   cliente: "Já sou cliente",
   menu: "Outra coisa",
@@ -34,9 +43,11 @@ type Fala = { otto: OttoEstado; fala: string; opcoes?: Escolha[] };
 
 type Resposta = Fala & {
   /** Para onde o Otto leva depois de falar: uma seção da home ou uma página. */
-  destino?: { secao: string } | { rota: "/download" };
+  destino?: { secao: string } | { rota: "/download" | "/como-surgiu" };
   /** O que ele diz ao chegar na página de destino. */
   chegada?: Fala;
+  /** O que ele diz se a pessoa já está na página de destino: não há para onde levar. */
+  aqui?: Fala;
   link?: { href: string; rotulo: string };
 };
 
@@ -47,7 +58,7 @@ const RESPOSTA: Record<Escolha, Resposta> = {
   "o-que-e": {
     otto: "atendendo",
     fala: "É acesso remoto para quem dá suporte de TI: você entra no computador do cliente e resolve na hora, sem sair do lugar. E sem surpresa no custo.",
-    opcoes: ["recursos", "precos", "menu"],
+    opcoes: ["recursos", "precos", "historia", "menu"],
   },
   recursos: {
     otto: "concluido",
@@ -66,6 +77,26 @@ const RESPOSTA: Record<Escolha, Resposta> = {
     fala: "É pra já! Vou abrir a página de download.",
     destino: { rota: "/download" },
     chegada: { otto: "concluido", fala: `Chegamos! ${COMO_INSTALAR}`, opcoes: ["menu"] },
+    aqui: {
+      otto: "concluido",
+      fala: `Você já está no lugar certo! ${COMO_INSTALAR}`,
+      opcoes: ["menu"],
+    },
+  },
+  historia: {
+    otto: "ola",
+    fala: "Ele foi criado por uma equipe de suporte técnico, a partir das limitações das ferramentas que ela usava no dia a dia. Te mostro a história!",
+    destino: { rota: "/como-surgiu" },
+    chegada: {
+      otto: "concluido",
+      fala: "Essa é a nossa história, contada por quem construiu. Quer ver os planos ou falar com o time?",
+      opcoes: ["precos", "especialista", "menu"],
+    },
+    aqui: {
+      otto: "concluido",
+      fala: "Você já está nela! É só ir descendo a página.",
+      opcoes: ["precos", "especialista", "menu"],
+    },
   },
   especialista: {
     otto: "concluido",
@@ -84,13 +115,6 @@ const RESPOSTA: Record<Escolha, Resposta> = {
     fala: "Claro! Como posso te ajudar?",
     opcoes: MENU,
   },
-};
-
-/** "Baixar" pedido por quem já está na página de download: não há para onde levar. */
-const BAIXAR_AQUI: Resposta = {
-  otto: "concluido",
-  fala: `Você já está no lugar certo! ${COMO_INSTALAR}`,
-  opcoes: ["menu"],
 };
 
 const CHAVE = "af-otto-guia";
@@ -221,7 +245,10 @@ export function OttoGuia() {
   }
 
   function escolher(escolha: Escolha) {
-    const r = escolha === "baixar" && pagina === "/download" ? BAIXAR_AQUI : RESPOSTA[escolha];
+    const pedida = RESPOSTA[escolha];
+    const jaEstaLa =
+      pedida.aqui && pedida.destino && "rota" in pedida.destino && pedida.destino.rota === pagina;
+    const r: Resposta = jaEstaLa && pedida.aqui ? pedida.aqui : pedida;
     setLink(undefined);
     setMensagens((m) => [...m, { id: proximoId.current++, de: "voce", texto: ROTULO[escolha] }]);
     falar(r, () => {

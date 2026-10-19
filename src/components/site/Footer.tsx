@@ -43,6 +43,11 @@ export function Footer() {
                   FAQ
                 </a>
               </li>
+              <li>
+                <a href="/como-surgiu" className="hover:text-text">
+                  Como surgiu
+                </a>
+              </li>
             </ul>
           </div>
           <div>

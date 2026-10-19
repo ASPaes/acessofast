@@ -46,6 +46,12 @@ export function Header() {
             </a>
           ))}
           <Link
+            to="/como-surgiu"
+            className="text-sm font-medium text-text-muted transition-colors hover:text-text"
+          >
+            Como surgiu
+          </Link>
+          <Link
             to="/download"
             className="text-sm font-medium text-text-muted transition-colors hover:text-text"
           >
