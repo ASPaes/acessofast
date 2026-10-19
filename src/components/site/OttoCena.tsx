@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { Otto, type OttoEstado } from "@/components/otto/otto";
 import { cn } from "@/lib/utils";
 
@@ -119,11 +120,22 @@ export function OttoCena() {
 
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="flex items-center gap-2 sm:gap-3" aria-hidden>
-        <Otto estado={CARA[fase]} olhar={[1, 0.1]} className="w-20 sm:w-24" />
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* O Otto da cena é também a porta para a página dele: mascote atrai clique. */}
+        <Link
+          to="/otto"
+          aria-label="Conheça o Otto"
+          title="Conheça o Otto"
+          className="rounded-full outline-none transition-transform hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-primary"
+        >
+          <Otto estado={CARA[fase]} olhar={[1, 0.1]} className="w-20 sm:w-24" />
+        </Link>
         {/* a conexão: some no problema, corre azul enquanto conecta e atende, fica verde no
             fim. Só anima ao ligar; no recomeço do laço some de uma vez. */}
-        <div className="relative h-1 w-20 overflow-hidden rounded-full bg-white/5 sm:w-32">
+        <div
+          aria-hidden
+          className="relative h-1 w-20 overflow-hidden rounded-full bg-white/5 sm:w-32"
+        >
           <div
             className={cn(
               "otto-cena-fio absolute inset-0 origin-left rounded-full",
@@ -133,7 +145,7 @@ export function OttoCena() {
             style={{ transform: `scaleX(${ligado ? 1 : 0})` }}
           />
         </div>
-        <div className="w-16 sm:w-20">
+        <div aria-hidden className="w-16 sm:w-20">
           <Computador fase={fase} />
         </div>
       </div>

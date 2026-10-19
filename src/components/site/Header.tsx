@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import logoAsset from "@/assets/acessofast-logo-real.png.asset.json";
+import { Otto } from "@/components/otto/otto";
 
 const nav = [
   { href: "/#recursos", label: "Recursos" },
@@ -35,7 +36,8 @@ export function Header() {
           />
           <span className="text-lg font-semibold tracking-tight text-text">AcessoFast</span>
         </a>
-        <nav className="hidden items-center gap-8 lg:flex">
+        {/* Sete links: no lg o espaço é contado, por isso o vão menor até o xl. */}
+        <nav className="hidden items-center gap-6 lg:flex xl:gap-8">
           {nav.map((n) => (
             <a
               key={n.href}
@@ -50,6 +52,13 @@ export function Header() {
             className="text-sm font-medium text-text-muted transition-colors hover:text-text"
           >
             Como surgiu
+          </Link>
+          <Link
+            to="/otto"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-text-muted transition-colors hover:text-text"
+          >
+            <Otto estado="parado" animado={false} seguirMouse className="w-6" />
+            Otto
           </Link>
           <Link
             to="/download"
