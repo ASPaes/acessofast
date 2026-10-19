@@ -583,33 +583,37 @@
 
 /* Cena do topo (src/components/site/OttoCena.tsx): o fio da conexão corre em
    tracejado enquanto conecta e fica verde quando resolve. */
-.otto-cena-fio {
+/* A listra que corre é uma faixa 28px mais larga que o fio, deslizando de lado:
+   mover a faixa inteira (transform) a placa de vídeo faz sozinha. Animar o
+   background-position obrigava o navegador a repintar o fio a cada quadro, para
+   sempre, e a página toda engasgava junto. */
+.otto-cena-listra {
+  position: absolute;
+  inset: 0 0 0 -28px;
   background: repeating-linear-gradient(90deg, #64a4ff 0 8px, transparent 8px 14px);
-  background-size: 28px 100%;
 }
 .otto-cena-fio-ok {
   background: #31c48d;
   box-shadow: 0 0 12px #31c48d;
 }
-.otto-cena-cursor { transform: translate(34px, 30px); }
+/* O alerta, os pontinhos e o cursor do computador são camadas do tamanho do
+   desenho (100x90): 1 unidade = 1% na largura e 1/0,9 % na altura. */
+.otto-cena-cursor { transform: translate(34%, 33.33%); }
 @media (prefers-reduced-motion: no-preference) {
-  .otto-cena-fio { animation: otto-cena-fio 0.6s linear infinite; }
+  .otto-cena-listra { animation: otto-cena-listra 0.6s linear infinite; }
   .otto-cena-alerta {
     animation: otto-cena-alerta 0.9s ease-in-out infinite;
-    transform-box: fill-box;
-    transform-origin: center;
+    transform-origin: 50% 38.9%;
   }
   .otto-cena-cursor { animation: otto-cena-cursor 1.7s ease-in-out infinite; }
-  .otto-cena-ponto { animation: otto-ponto 1.2s ease-in-out infinite; }
-  .otto-cena-ponto:nth-child(2) { animation-delay: 0.18s; }
-  .otto-cena-ponto:nth-child(3) { animation-delay: 0.36s; }
+  .otto-cena-ponto { animation: otto-ponto 1.2s ease-in-out infinite; } /* o atraso vem do OttoCena.tsx */
 }
-@keyframes otto-cena-fio { to { background-position: 28px 0; } }
+@keyframes otto-cena-listra { to { transform: translateX(28px); } }
 @keyframes otto-cena-alerta { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
 @keyframes otto-cena-cursor {
-  0%, 100% { transform: translate(30px, 32px); }
-  40% { transform: translate(52px, 40px); }
-  70% { transform: translate(60px, 24px); }
+  0%, 100% { transform: translate(30%, 35.56%); }
+  40% { transform: translate(52%, 44.44%); }
+  70% { transform: translate(60%, 26.67%); }
 }
 
 /* Plano indicado pelo Otto na grade de preços: contorno verde que pisca três

@@ -30,68 +30,85 @@ const TELA: Record<Fase, string> = {
   resolvido: "#0e281f",
 };
 
-/** O computador do cliente, do outro lado da conexão. */
+/** Camada do desenho do computador: um SVG inteiro por cima do outro. */
+const CAMADA = "absolute inset-0 block h-full w-full overflow-visible";
+
+/** O computador do cliente, do outro lado da conexão. O que anima (alerta,
+    pontinhos, cursor) é uma camada à parte, e a animação move a camada inteira:
+    isso a placa de vídeo faz sozinha. Animado por dentro do SVG, o navegador
+    refazia o layout da página a cada quadro. */
 function Computador({ fase }: { fase: Fase }) {
   return (
-    <svg viewBox="0 0 100 90" className="h-full w-full overflow-visible" aria-hidden>
-      <rect
-        x={6}
-        y={4}
-        width={88}
-        height={62}
-        rx={11}
-        fill="#1b2232"
-        stroke="#2d3852"
-        strokeWidth={2}
-      />
-      <rect
-        x={14}
-        y={12}
-        width={72}
-        height={46}
-        rx={6}
-        fill={TELA[fase]}
-        className="transition-[fill] duration-500"
-      />
-      <rect x={44} y={66} width={12} height={11} fill="#2d3852" />
-      <rect x={30} y={76} width={40} height={8} rx={4} fill="#2d3852" />
+    <div className="relative">
+      <svg viewBox="0 0 100 90" className="block w-full overflow-visible" aria-hidden>
+        <rect
+          x={6}
+          y={4}
+          width={88}
+          height={62}
+          rx={11}
+          fill="#1b2232"
+          stroke="#2d3852"
+          strokeWidth={2}
+        />
+        <rect
+          x={14}
+          y={12}
+          width={72}
+          height={46}
+          rx={6}
+          fill={TELA[fase]}
+          className="transition-[fill] duration-500"
+        />
+        <rect x={44} y={66} width={12} height={11} fill="#2d3852" />
+        <rect x={30} y={76} width={40} height={8} rx={4} fill="#2d3852" />
+        {fase === "atendendo" && (
+          <g>
+            <rect x={22} y={20} width={56} height={30} rx={3} fill="#1d3a7a" />
+            <rect x={22} y={20} width={56} height={6} rx={3} fill="#2c67fa" />
+          </g>
+        )}
+        {fase === "resolvido" && (
+          <g>
+            <circle cx={50} cy={35} r={14} fill="#31c48d" opacity={0.22} />
+            <path
+              d="M42 35.5 47.5 41 58.5 29.5"
+              fill="none"
+              stroke="#31c48d"
+              strokeWidth={4.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </g>
+        )}
+      </svg>
 
       {fase === "problema" && (
-        <g className="otto-cena-alerta">
+        <svg viewBox="0 0 100 90" className={cn(CAMADA, "otto-cena-alerta")} aria-hidden>
           <circle cx={50} cy={35} r={13} fill="#f05252" opacity={0.25} />
           <circle cx={50} cy={35} r={9} fill="#f05252" />
           <path d="M50 29.5V36" stroke="#fff" strokeWidth={2.6} strokeLinecap="round" />
           <circle cx={50} cy={40} r={1.6} fill="#fff" />
-        </g>
+        </svg>
       )}
-      {fase === "conectando" && (
-        <g fill="#64a4ff">
-          <circle className="otto-cena-ponto" cx={40} cy={35} r={3} />
-          <circle className="otto-cena-ponto" cx={50} cy={35} r={3} />
-          <circle className="otto-cena-ponto" cx={60} cy={35} r={3} />
-        </g>
-      )}
+      {fase === "conectando" &&
+        [40, 50, 60].map((cx, i) => (
+          <svg
+            key={cx}
+            viewBox="0 0 100 90"
+            className={cn(CAMADA, "otto-cena-ponto")}
+            style={{ animationDelay: `${i * 0.18}s` }}
+            aria-hidden
+          >
+            <circle cx={cx} cy={35} r={3} fill="#64a4ff" />
+          </svg>
+        ))}
       {fase === "atendendo" && (
-        <g>
-          <rect x={22} y={20} width={56} height={30} rx={3} fill="#1d3a7a" />
-          <rect x={22} y={20} width={56} height={6} rx={3} fill="#2c67fa" />
-          <path className="otto-cena-cursor" d="M0 0V12L3 9 5.5 14 8 13 5.5 8H10Z" fill="#fff" />
-        </g>
+        <svg viewBox="0 0 100 90" className={cn(CAMADA, "otto-cena-cursor")} aria-hidden>
+          <path d="M0 0V12L3 9 5.5 14 8 13 5.5 8H10Z" fill="#fff" />
+        </svg>
       )}
-      {fase === "resolvido" && (
-        <g>
-          <circle cx={50} cy={35} r={14} fill="#31c48d" opacity={0.22} />
-          <path
-            d="M42 35.5 47.5 41 58.5 29.5"
-            fill="none"
-            stroke="#31c48d"
-            strokeWidth={4.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </g>
-      )}
-    </svg>
+    </div>
   );
 }
 
@@ -138,12 +155,14 @@ export function OttoCena() {
         >
           <div
             className={cn(
-              "otto-cena-fio absolute inset-0 origin-left rounded-full",
+              "absolute inset-0 origin-left overflow-hidden rounded-full",
               ligado && "transition-transform duration-700 ease-out",
               resolveu && "otto-cena-fio-ok",
             )}
             style={{ transform: `scaleX(${ligado ? 1 : 0})` }}
-          />
+          >
+            {ligado && !resolveu && <span className="otto-cena-listra" />}
+          </div>
         </div>
         <div aria-hidden className="w-16 sm:w-20">
           <Computador fase={fase} />
