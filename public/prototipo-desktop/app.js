@@ -553,7 +553,7 @@ function janela(w) {
   return `<div class="${cls}" data-win="${w.id}" ${principal ? 'id="win"' : ""} ${estilo}>
       <div class="titlebar" data-arrastar-janela="${principal ? "" : w.id}">
         <div class="tabsbar" data-bar="${w.id}" role="tablist">${home}${w.abas.map((a) => htmlAba(w, a)).join("")}${nova}</div>
-        <div class="wctl"><i>—</i><i data-a="maximizar" data-v="${w.id}" title="${w.max ? "Restaurar" : "Maximizar"}">${w.max ? "❐" : "▢"}</i><i ${principal ? "" : `data-a="fecharJanela" data-v="${w.id}"`} title="Fechar">✕</i></div>
+        <div class="wctl"><i>—</i><i>${w.max ? "❐" : "▢"}</i><i ${principal ? "" : `data-a="fecharJanela" data-v="${w.id}"`} title="Fechar">✕</i></div>
       </div>
       <div class="wbody">${corpo}${focada ? modal() : ""}</div>
       ${principal ? menuContexto() : ""}
@@ -648,7 +648,6 @@ function abrir(dev, tipo, onde = {}) {
   const w = W(onde.win) || W("main");
   const t = { k: "t" + seq++, tipo, dev, conectando: true, ini: Date.now() };
   if (tipo === "sessao") {
-    if (w.id === "main") w.max = true;
     Object.assign(t, { mon: 1, tam: "ajustar", escala: 80, mudo: false, qual: "equilibrada", cursor: true, priv: false, bloqFim: false, clip: true, qind: true, codec: "Automática", kbd: "mapa", chat: false, msgs: [], rec: S.prefs.gravarAuto, recIni: Date.now(), tbOff: false, bloqIn: false, virtual: false });
   } else {
     Object.assign(t, {
@@ -955,7 +954,7 @@ document.addEventListener("click", (ev) => {
 
 document.addEventListener("dblclick", (ev) => {
   const bar = ev.target.closest(".tabsbar");
-  if (bar && !ev.target.closest("[data-tab], .wtab, .wnew, .menu")) { const w = W(bar.dataset.bar); w.max = !w.max; render(); return; }
+  if (bar && !ev.target.closest("[data-tab], .wtab, .wnew, .menu")) return;
   const el = ev.target.closest('.fr[data-dir="1"]');
   if (!el) return;
   const t = aba(); const L = el.dataset.v;
