@@ -37,7 +37,7 @@ function DownloadPage() {
     <div className="flex min-h-screen flex-col">
       <Header />
       <main className="flex flex-1 items-center justify-center px-6 py-24">
-        <section className="mx-auto max-w-xl text-center">
+        <section id="download" className="mx-auto max-w-xl text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.14em] text-primary">
             Recebeu um pedido de suporte?
           </p>

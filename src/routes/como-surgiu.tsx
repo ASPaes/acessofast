@@ -137,7 +137,7 @@ function ComoSurgiuPage() {
           </div>
         </section>
 
-        <section className="py-20">
+        <section id="problema" className="py-20">
           <div className="mx-auto max-w-6xl px-6">
             <div className="max-w-2xl">
               <p className="text-sm font-semibold uppercase tracking-[0.14em] text-primary">
@@ -161,7 +161,7 @@ function ComoSurgiuPage() {
           </div>
         </section>
 
-        <section className="py-20">
+        <section id="decisao" className="py-20">
           <div className="mx-auto max-w-6xl px-6">
             <div className="max-w-2xl">
               <p className="text-sm font-semibold uppercase tracking-[0.14em] text-primary">
@@ -190,7 +190,7 @@ function ComoSurgiuPage() {
           </div>
         </section>
 
-        <section className="py-20">
+        <section id="resultado" className="py-20">
           <div className="mx-auto max-w-6xl px-6">
             <div className="max-w-2xl">
               <p className="text-sm font-semibold uppercase tracking-[0.14em] text-primary">
@@ -221,7 +221,7 @@ function ComoSurgiuPage() {
           </div>
         </section>
 
-        <section className="py-20">
+        <section id="plataformas" className="py-20">
           <div className="mx-auto max-w-6xl px-6">
             <div className="max-w-2xl">
               <p className="text-sm font-semibold uppercase tracking-[0.14em] text-primary">

@@ -548,6 +548,15 @@
   .otto-guia-ponto:nth-child(2) { animation-delay: 0.18s; }
   .otto-guia-ponto:nth-child(3) { animation-delay: 0.36s; }
 }
+/* Pulinho quando ele fala sem ninguém ter perguntado (comentário de seção). */
+@media (prefers-reduced-motion: no-preference) {
+  .otto-guia-pulo { animation: otto-guia-pulo 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+}
+@keyframes otto-guia-pulo {
+  0%, 100% { transform: translateY(0) scale(1); }
+  30% { transform: translateY(-16px) scale(1.04, 0.96); }
+  60% { transform: translateY(0) scale(1.06, 0.92); }
+}
 @keyframes otto-guia-entra {
   from { transform: translateY(120%) scale(0.6); opacity: 0; }
   to { transform: none; opacity: 1; }
