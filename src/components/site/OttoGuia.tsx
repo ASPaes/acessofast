@@ -244,7 +244,7 @@ const COMENTARIOS: Record<string, Fala> = {
   },
   app: {
     otto: "ola",
-    fala: "Esse é o app no computador. Clica nas abas pra explorar!",
+    fala: "Esse é o app no computador, e dá pra mexer! Conecta num computador ou usa o simulador embaixo da janela.",
     opcoes: op("baixar", "menu"),
   },
   diferenciais: {
