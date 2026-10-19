@@ -1,16 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { X } from "lucide-react";
 import { Otto, type OttoEstado } from "@/components/otto/otto";
 import { cn } from "@/lib/utils";
 
-// O Otto como guia do site. Assim que a home abre ele entra no canto, acena e
+// O Otto como guia do site. Assim que o site abre ele entra no canto, acena e
 // pergunta como pode ajudar. As respostas são botões, não chat livre: cada uma
 // leva a pessoa para a parte certa do site (recursos, preço, download, contato
 // ou o painel) e o Otto comenta o caminho, mudando de cara conforme a conversa.
 //
-// Ele abre sozinho só na primeira vez da sessão. Fechado, fica pequeno no canto
-// e reabre a conversa com um clique.
+// Fica montado no layout raiz, então acompanha a pessoa de uma página para a
+// outra sem perder a conversa. Depois de levar a pessoa a algum lugar a
+// conversa continua aberta, já com o próximo passo. Abre sozinho só na primeira
+// vez da sessão; fechado, fica no canto e reabre com um clique.
 
 type Escolha = "o-que-e" | "recursos" | "precos" | "baixar" | "especialista" | "cliente" | "menu";
 
@@ -28,14 +30,18 @@ const MENU: Escolha[] = ["o-que-e", "precos", "baixar", "especialista", "cliente
 
 const SAUDACAO = "Oi! Eu sou o Otto, do AcessoFast. Como posso te ajudar?";
 
-type Resposta = {
-  otto: OttoEstado;
-  fala: string;
-  opcoes?: Escolha[];
-  /** Para onde o Otto leva depois de falar: uma seção da home ou uma rota. */
+type Fala = { otto: OttoEstado; fala: string; opcoes?: Escolha[] };
+
+type Resposta = Fala & {
+  /** Para onde o Otto leva depois de falar: uma seção da home ou uma página. */
   destino?: { secao: string } | { rota: "/download" };
+  /** O que ele diz ao chegar na página de destino. */
+  chegada?: Fala;
   link?: { href: string; rotulo: string };
 };
+
+const COMO_INSTALAR =
+  "Clique em “Baixar para Windows”, abra o instalador e passe para o seu técnico o ID e a senha que aparecem na tela.";
 
 const RESPOSTA: Record<Escolha, Resposta> = {
   "o-que-e": {
@@ -45,23 +51,27 @@ const RESPOSTA: Record<Escolha, Resposta> = {
   },
   recursos: {
     otto: "concluido",
-    fala: "Te levo lá! Os recursos estão aqui embaixo.",
+    fala: "Te levo lá! Os recursos estão aqui.",
     destino: { secao: "recursos" },
+    opcoes: ["precos", "especialista", "menu"],
   },
   precos: {
     otto: "concluido",
-    fala: "Dá para começar de graça, e os planos de equipe têm 7 dias grátis para testar. Olha os preços aqui embaixo!",
+    fala: "Dá para começar de graça, e os planos de equipe têm 7 dias grátis para testar. Olha os preços aqui!",
     destino: { secao: "preco" },
+    opcoes: ["especialista", "menu"],
   },
   baixar: {
     otto: "conectando",
     fala: "É pra já! Vou abrir a página de download.",
     destino: { rota: "/download" },
+    chegada: { otto: "concluido", fala: `Chegamos! ${COMO_INSTALAR}`, opcoes: ["menu"] },
   },
   especialista: {
     otto: "concluido",
     fala: "Bora! Deixa seus dados no formulário e o time responde em até 1 dia útil.",
     destino: { secao: "contato" },
+    opcoes: ["precos", "menu"],
   },
   cliente: {
     otto: "ola",
@@ -74,6 +84,13 @@ const RESPOSTA: Record<Escolha, Resposta> = {
     fala: "Claro! Como posso te ajudar?",
     opcoes: MENU,
   },
+};
+
+/** "Baixar" pedido por quem já está na página de download: não há para onde levar. */
+const BAIXAR_AQUI: Resposta = {
+  otto: "concluido",
+  fala: `Você já está no lugar certo! ${COMO_INSTALAR}`,
+  opcoes: ["menu"],
 };
 
 const CHAVE = "af-otto-guia";
@@ -101,6 +118,7 @@ function marcarVisto() {
 
 export function OttoGuia() {
   const navigate = useNavigate();
+  const pagina = useRouterState({ select: (s) => s.location.pathname });
   const [visivel, setVisivel] = useState(false);
   const [aberto, setAberto] = useState(false);
   const [mensagens, setMensagens] = useState<Mensagem[]>([]);
@@ -108,7 +126,6 @@ export function OttoGuia() {
   const [opcoes, setOpcoes] = useState<Escolha[]>([]);
   const [link, setLink] = useState<Resposta["link"]>();
   const [estado, setEstado] = useState<OttoEstado>("ola");
-  const [recado, setRecado] = useState<string | null>(null);
 
   const lista = useRef<HTMLDivElement>(null);
   const timers = useRef<number[]>([]);
@@ -120,13 +137,15 @@ export function OttoGuia() {
   }, []);
 
   const falar = useCallback(
-    (texto: string, cara: OttoEstado, aoTerminar?: () => void) => {
+    (f: Fala, aoTerminar?: () => void) => {
+      setOpcoes([]);
       setDigitando(true);
       setEstado("conectando");
       depois(ESPERA_DIGITANDO, () => {
         setDigitando(false);
-        setEstado(cara);
-        setMensagens((m) => [...m, { id: proximoId.current++, de: "otto", texto }]);
+        setEstado(f.otto);
+        setMensagens((m) => [...m, { id: proximoId.current++, de: "otto", texto: f.fala }]);
+        if (f.opcoes) setOpcoes(f.opcoes);
         aoTerminar?.();
       });
     },
@@ -151,7 +170,7 @@ export function OttoGuia() {
         setVisivel(true);
         setAberto(true);
         marcarVisto();
-        falar(SAUDACAO, "ola", () => setOpcoes(MENU));
+        falar({ otto: "ola", fala: SAUDACAO, opcoes: MENU });
       });
     }
     return () => {
@@ -177,44 +196,49 @@ export function OttoGuia() {
     return () => window.removeEventListener("keydown", aoTeclar);
   }, [aberto, minimizar]);
 
-  function levar(destino: NonNullable<Resposta["destino"]>) {
+  function levar(r: Resposta) {
+    const destino = r.destino;
+    if (!destino) return;
     if ("rota" in destino) {
-      void navigate({ to: destino.rota });
+      void navigate({ to: destino.rota }).then(() => {
+        if (r.chegada) falar(r.chegada);
+      });
       return;
     }
     const secao = document.getElementById(destino.secao);
     if (secao) {
       secao.scrollIntoView({ behavior: semMovimento.current ? "auto" : "smooth" });
+      return;
     }
-    // Fecha para não cobrir a seção que ele acabou de mostrar, e avisa onde ficou.
-    setAberto(false);
-    setEstado("parado");
-    setRecado("Tô aqui no canto se precisar!");
-    depois(5000, () => setRecado(null));
+    // Seção da home pedida de outra página: quem rola é o próprio roteador, pela
+    // âncora. Rolar na mão depois do navigate não serve: a restauração de
+    // rolagem da troca de página joga a home de volta para o topo.
+    void navigate({
+      to: "/",
+      hash: destino.secao,
+      hashScrollIntoView: { behavior: semMovimento.current ? "auto" : "smooth" },
+    });
   }
 
   function escolher(escolha: Escolha) {
-    const r = RESPOSTA[escolha];
-    setOpcoes([]);
+    const r = escolha === "baixar" && pagina === "/download" ? BAIXAR_AQUI : RESPOSTA[escolha];
     setLink(undefined);
     setMensagens((m) => [...m, { id: proximoId.current++, de: "voce", texto: ROTULO[escolha] }]);
-    falar(r.fala, r.otto, () => {
-      if (r.opcoes) setOpcoes(r.opcoes);
+    falar(r, () => {
       if (r.link) setLink(r.link);
-      const destino = r.destino;
-      if (destino) depois(ESPERA_DESTINO, () => levar(destino));
+      if (r.destino) depois(ESPERA_DESTINO, () => levar(r));
     });
   }
 
   function reabrir() {
     setAberto(true);
-    setRecado(null);
-    // Conversa que tinha terminado (a pessoa já foi levada a algum lugar):
-    // ele puxa assunto de novo em vez de abrir mudo.
+    // Sem conversa em andamento, ele puxa assunto em vez de abrir mudo.
     if (!digitando && opcoes.length === 0 && !link) {
-      falar(mensagens.length ? "Posso ajudar em mais alguma coisa?" : SAUDACAO, "ola", () =>
-        setOpcoes(MENU),
-      );
+      falar({
+        otto: "ola",
+        fala: mensagens.length ? "Posso ajudar em mais alguma coisa?" : SAUDACAO,
+        opcoes: MENU,
+      });
     }
   }
 
@@ -223,11 +247,11 @@ export function OttoGuia() {
   return (
     <aside
       aria-label="Otto, assistente do AcessoFast"
-      className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-1 sm:bottom-6 sm:right-6"
+      className="fixed bottom-4 right-4 z-40 flex flex-col items-end sm:bottom-6 sm:right-6"
     >
       {aberto && (
-        <div className="otto-guia-painel relative origin-bottom-right">
-          <div className="w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl">
+        <div className="otto-guia-painel relative mb-1 origin-bottom-right">
+          <div className="w-[min(23rem,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl">
             <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
               <p className="text-sm font-semibold text-text">
                 Otto <span className="font-normal text-text-muted">· AcessoFast</span>
@@ -245,7 +269,7 @@ export function OttoGuia() {
             <div
               ref={lista}
               aria-live="polite"
-              className="max-h-[min(20rem,45vh)] space-y-2 overflow-y-auto px-4 py-3"
+              className="max-h-[min(20rem,40vh)] space-y-2 overflow-y-auto px-4 py-3"
             >
               {mensagens.map((m) => (
                 <p
@@ -295,30 +319,23 @@ export function OttoGuia() {
               </div>
             )}
           </div>
-          {/* Pontinha do balão, apontando para o Otto embaixo. */}
+          {/* Pontinha do balão, apontando para a cabeça do Otto logo abaixo. */}
           <span
             aria-hidden
-            className="absolute -bottom-[7px] right-[33px] h-3.5 w-3.5 rotate-45 border-b border-r border-border bg-surface sm:right-[41px]"
+            className="absolute -bottom-[7px] right-[41px] h-3.5 w-3.5 rotate-45 border-b border-r border-border bg-surface sm:right-[65px]"
           />
         </div>
       )}
 
-      <div className="flex items-end gap-2">
-        {!aberto && recado && (
-          <p className="otto-guia-painel mb-5 rounded-2xl rounded-br-md border border-border bg-surface px-3 py-2 text-[13px] text-text shadow-lg">
-            {recado}
-          </p>
-        )}
-        <button
-          type="button"
-          onClick={aberto ? minimizar : reabrir}
-          aria-expanded={aberto}
-          aria-label={aberto ? "Fechar conversa com o Otto" : "Falar com o Otto"}
-          className="otto-guia-entra rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary"
-        >
-          <Otto estado={estado} className={aberto ? "w-20 sm:w-24" : "w-16 sm:w-20"} />
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={aberto ? minimizar : reabrir}
+        aria-expanded={aberto}
+        aria-label={aberto ? "Fechar conversa com o Otto" : "Falar com o Otto"}
+        className="otto-guia-entra -mt-2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-primary sm:-mt-3"
+      >
+        <Otto estado={estado} className="w-24 sm:w-36" />
+      </button>
     </aside>
   );
 }

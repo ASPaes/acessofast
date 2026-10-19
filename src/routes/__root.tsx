@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Toaster } from "@/components/ui/sonner";
 import { Otto } from "@/components/otto/otto";
+import { OttoGuia } from "@/components/site/OttoGuia";
 
 function NotFoundComponent() {
   return (
@@ -130,6 +131,8 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
+      {/* Aqui, e não em cada página, para o Otto acompanhar a pessoa pelo site sem perder a conversa. */}
+      <OttoGuia />
       <Toaster richColors position="top-right" />
     </QueryClientProvider>
   );

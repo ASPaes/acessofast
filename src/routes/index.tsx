@@ -13,7 +13,6 @@ import { Faq } from "@/components/site/Faq";
 import { ContactSection } from "@/components/site/ContactSection";
 import { PlanCheckoutDialog, type DialogAction } from "@/components/site/PlanCheckoutDialog";
 import { Footer } from "@/components/site/Footer";
-import { OttoGuia } from "@/components/site/OttoGuia";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -66,7 +65,6 @@ function Index() {
         <ContactSection />
       </main>
       <Footer />
-      <OttoGuia />
       <PlanCheckoutDialog
         open={!!checkout}
         onOpenChange={(o) => {
