@@ -1,6 +1,7 @@
 import { ArrowRight } from "lucide-react";
 import { AppDemo } from "@/components/site/app-demo/AppDemo";
 import { ParticlesBackground } from "@/components/site/ParticlesBackground";
+import { OttoCena } from "@/components/site/OttoCena";
 
 export function Hero() {
   return (
@@ -8,10 +9,7 @@ export function Hero() {
       <ParticlesBackground />
       <div className="relative mx-auto max-w-6xl px-6">
         <div className="mx-auto max-w-3xl text-center">
-          <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.28em] text-primary">
-            <span className="h-px w-8 bg-primary/50" />
-            Conectou. Resolveu.
-          </span>
+          <OttoCena />
           <h1 className="mt-6 text-balance text-5xl font-extrabold tracking-tight text-text sm:text-6xl md:text-[68px] md:leading-[1.05]">
             Acesso remoto e suporte de TI,
             <span className="block text-primary">sem surpresa no custo.</span>
@@ -23,6 +21,7 @@ export function Hero() {
           <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
             <a
               href="#contato"
+              data-otto-feliz
               className="group inline-flex h-12 items-center gap-2 rounded-btn bg-primary px-6 text-[15px] font-semibold text-primary-foreground shadow-soft transition-all hover:bg-primary-hover hover:-translate-y-[1px]"
             >
               Solicitar demonstração

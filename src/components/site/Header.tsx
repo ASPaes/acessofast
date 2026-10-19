@@ -60,6 +60,7 @@ export function Header() {
         </nav>
         <a
           href="/#contato"
+          data-otto-feliz
           className="inline-flex h-10 items-center justify-center rounded-btn bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-soft transition-all hover:bg-primary-hover hover:-translate-y-[1px]"
         >
           Falar com especialista

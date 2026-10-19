@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { insertLead, type LeadPayload } from "@/lib/leads";
@@ -25,13 +25,35 @@ const empty: Form = {
   consentimento_lgpd: false,
 };
 
+/** Em que pé está o formulário, para o Otto ao lado reagir (ContactSection). */
+export type EstadoLead = "inicio" | "preenchendo" | "faltando" | "enviando" | "enviado" | "falhou";
+
 const inputCls =
   "h-11 w-full rounded-btn border border-border bg-surface px-3.5 text-[15px] text-text outline-none transition-all placeholder:text-text-muted/70 focus:border-primary focus:ring-4 focus:ring-primary/10";
 
-export function LeadForm() {
+export function LeadForm({ onEstado }: { onEstado?: (estado: EstadoLead) => void }) {
   const [form, setForm] = useState<Form>(empty);
   const [errors, setErrors] = useState<Partial<Record<keyof Form, string>>>({});
   const [status, setStatus] = useState<"idle" | "loading" | "success">("idle");
+  const [focado, setFocado] = useState(false);
+  const [falhou, setFalhou] = useState(false);
+
+  const temErros = Object.values(errors).some(Boolean);
+  const estado: EstadoLead =
+    status === "success"
+      ? "enviado"
+      : status === "loading"
+        ? "enviando"
+        : falhou
+          ? "falhou"
+          : temErros
+            ? "faltando"
+            : focado
+              ? "preenchendo"
+              : "inicio";
+  useEffect(() => {
+    onEstado?.(estado);
+  }, [estado, onEstado]);
 
   const set = <K extends keyof Form>(k: K, v: Form[K]) => {
     setForm((p) => ({ ...p, [k]: v }));
@@ -52,6 +74,7 @@ export function LeadForm() {
   };
 
   const submit = async () => {
+    setFalhou(false);
     if (!validate()) return;
     setStatus("loading");
     try {
@@ -69,6 +92,7 @@ export function LeadForm() {
     } catch (err) {
       console.error("[LeadForm] insert error:", err);
       toast.error("Não foi possível enviar agora. Tente novamente em instantes.");
+      setFalhou(true);
       setStatus("idle");
     }
   };
@@ -88,7 +112,13 @@ export function LeadForm() {
   }
 
   return (
-    <div className="rounded-card border border-border bg-surface p-6 shadow-soft sm:p-8">
+    <div
+      className="rounded-card border border-border bg-surface p-6 shadow-soft sm:p-8"
+      onFocus={() => setFocado(true)}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocado(false);
+      }}
+    >
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Nome" error={errors.nome}>
           <input
@@ -191,6 +221,7 @@ export function LeadForm() {
         type="button"
         onClick={submit}
         disabled={status === "loading"}
+        data-otto-feliz
         className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-btn bg-primary text-[15px] font-semibold text-primary-foreground shadow-soft transition-all hover:bg-primary-hover disabled:opacity-70 sm:w-auto sm:px-8"
       >
         {status === "loading" && <Loader2 className="h-4 w-4 animate-spin" />}

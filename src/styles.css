@@ -504,6 +504,11 @@
   border-radius: 50%;
   background: radial-gradient(closest-side, rgb(0 0 0 / 55%), transparent);
 }
+/* Para onde ele olha: ver "o olhar" em otto.tsx. */
+.otto-olhar {
+  transform: translate(var(--otto-ox, 0px), var(--otto-oy, 0px));
+  transition: transform 0.25s ease-out;
+}
 @media (prefers-reduced-motion: no-preference) {
   .otto-vivo .otto-corpo { animation: otto-flutua 3.8s ease-in-out infinite; }
   .otto-vivo::after { animation: otto-sombra 3.8s ease-in-out infinite; }
@@ -550,6 +555,67 @@
 @keyframes otto-guia-painel {
   from { transform: translateY(8px) scale(0.96); opacity: 0; }
   to { transform: none; opacity: 1; }
+}
+
+/* Cena do topo (src/components/site/OttoCena.tsx): o fio da conexão corre em
+   tracejado enquanto conecta e fica verde quando resolve. */
+.otto-cena-fio {
+  background: repeating-linear-gradient(90deg, #64a4ff 0 8px, transparent 8px 14px);
+  background-size: 28px 100%;
+}
+.otto-cena-fio-ok {
+  background: #31c48d;
+  box-shadow: 0 0 12px #31c48d;
+}
+.otto-cena-cursor { transform: translate(34px, 30px); }
+@media (prefers-reduced-motion: no-preference) {
+  .otto-cena-fio { animation: otto-cena-fio 0.6s linear infinite; }
+  .otto-cena-alerta {
+    animation: otto-cena-alerta 0.9s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .otto-cena-cursor { animation: otto-cena-cursor 1.7s ease-in-out infinite; }
+  .otto-cena-ponto { animation: otto-ponto 1.2s ease-in-out infinite; }
+  .otto-cena-ponto:nth-child(2) { animation-delay: 0.18s; }
+  .otto-cena-ponto:nth-child(3) { animation-delay: 0.36s; }
+}
+@keyframes otto-cena-fio { to { background-position: 28px 0; } }
+@keyframes otto-cena-alerta { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+@keyframes otto-cena-cursor {
+  0%, 100% { transform: translate(30px, 32px); }
+  40% { transform: translate(52px, 40px); }
+  70% { transform: translate(60px, 24px); }
+}
+
+/* Plano indicado pelo Otto na grade de preços: contorno verde que pisca três
+   vezes e fica, junto com o selo "Indicado pelo Otto". */
+.otto-destaque {
+  outline: 2px solid var(--success);
+  outline-offset: 4px;
+  border-radius: var(--radius-card);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .otto-destaque { animation: otto-destaque 0.9s ease-in-out 3; }
+}
+@keyframes otto-destaque { 50% { outline-color: transparent; } }
+
+/* Balão de fala do Otto do formulário de contato. */
+.otto-fala {
+  position: relative;
+}
+.otto-fala::before {
+  content: "";
+  position: absolute;
+  left: -7px;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  translate: 0 -50%;
+  rotate: 45deg;
+  background: inherit;
+  border-left: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
 }
 
 /* ===== fim de src/styles.css ===== */

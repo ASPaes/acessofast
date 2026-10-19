@@ -258,7 +258,7 @@ function ComoSurgiuPage() {
 
         <section className="py-24">
           <div className="mx-auto flex max-w-4xl flex-col items-center gap-6 rounded-card border border-border bg-surface px-6 py-12 text-center shadow-soft sm:px-12">
-            <Otto estado="concluido" className="w-28" />
+            <Otto estado="concluido" seguirMouse className="w-28" />
             <h2 className="text-3xl font-extrabold tracking-tight text-text sm:text-4xl">
               Feito por técnicos, para técnicos.
             </h2>
@@ -268,6 +268,7 @@ function ComoSurgiuPage() {
             <div className="flex flex-wrap justify-center gap-3">
               <a
                 href="/#preco"
+                data-otto-feliz
                 className="inline-flex h-12 items-center gap-2 rounded-btn bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-soft transition-all hover:bg-primary-hover hover:-translate-y-[1px]"
               >
                 Ver planos
