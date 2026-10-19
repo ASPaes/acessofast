@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CheckCircle2 } from "lucide-react";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
+import { Otto } from "@/components/otto/otto";
 
 export const Route = createFileRoute("/obrigado")({
   component: ObrigadoPage,
@@ -24,9 +24,7 @@ function ObrigadoPage() {
       <Header />
       <main className="flex flex-1 items-center justify-center px-6 py-24">
         <section className="mx-auto w-full max-w-xl rounded-card border border-border bg-surface p-8 text-center shadow-soft sm:p-12">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/15 text-success">
-            <CheckCircle2 className="h-8 w-8" strokeWidth={1.75} />
-          </div>
+          <Otto estado="concluido" className="mx-auto w-28" />
 
           <h1 className="mt-6 text-3xl font-extrabold tracking-tight text-text sm:text-4xl">
             Pagamento confirmado!

@@ -1,10 +1,12 @@
 import { LeadForm } from "./LeadForm";
+import { Otto } from "@/components/otto/otto";
 
 export function ContactSection() {
   return (
     <section id="contato" className="py-28">
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-12 px-6 lg:grid-cols-2">
         <div>
+          <Otto estado="ola" className="mb-4 w-24" />
           <p className="text-sm font-semibold uppercase tracking-[0.14em] text-primary">
             Fale com um especialista
           </p>
