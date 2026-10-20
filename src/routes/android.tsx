@@ -173,7 +173,9 @@ function AndroidPage() {
               <div className="hidden items-center gap-5 xl:flex" aria-hidden>
                 <Otto estado="conectando" olhar={[1, 0.15]} className="w-24" />
                 <div className="relative h-1 w-14 overflow-hidden rounded-full bg-white/5">
-                  <div className="otto-cena-fio absolute inset-0 rounded-full" />
+                  <div className="absolute inset-0 overflow-hidden rounded-full">
+                    <span className="otto-cena-listra" />
+                  </div>
                 </div>
               </div>
               <CelularComPrototipo />

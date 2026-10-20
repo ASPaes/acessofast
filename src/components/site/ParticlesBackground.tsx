@@ -4,8 +4,11 @@ import { useEffect, useRef } from "react";
    perto. O canvas é transparente — o preto vem do fundo do body, então a página
    continua preta e só as partículas são desenhadas.
 
-   Cobre só o bloco em que é montado (hoje o hero). A máscara dissolve o desenho
-   no rodapé desse bloco, pra ele não terminar num corte reto contra o preto. */
+   Cobre só o bloco em que é montado (hoje o hero). Um degradê para o preto do
+   fundo dissolve o desenho no rodapé desse bloco, pra ele não terminar num corte
+   reto. É uma camada parada por cima, e não mask-image no canvas: com máscara, a
+   placa de vídeo refazia o recorte a cada quadro, e em vídeo integrado a página
+   inteira engasgava. */
 
 type Particle = {
   x: number;
@@ -57,6 +60,9 @@ export function ParticlesBackground() {
     let height = 0;
     let frame = 0;
     let lastTime = 0;
+    /* Fora da tela o desenho para: rodando escondido, o canvas disputa a placa
+       de vídeo com a pintura do resto da página e a rolagem engasga. */
+    let naTela = true;
 
     /* Reaproveitados quadro a quadro (só zeramos o comprimento) para não gerar
        lixo novo 60 vezes por segundo. */
@@ -207,11 +213,15 @@ export function ParticlesBackground() {
     }
 
     function tick(time: number) {
+      frame = requestAnimationFrame(tick);
+      /* Sem o ponteiro por perto, a deriva (11 px/s) fica igual a olho nu em
+         30 quadros por segundo, e a placa de vídeo trabalha metade. Com o
+         ponteiro empurrando as partículas, volta a desenhar todo quadro. */
+      if (!pointer.active && lastTime && time - lastTime < 30) return;
       // Clampa o delta pra não teleportar as partículas depois de uma aba parada.
       const dt = lastTime ? Math.min((time - lastTime) / 1000, 0.05) : 0;
       lastTime = time;
       render(dt);
-      frame = requestAnimationFrame(tick);
     }
 
     function stop() {
@@ -221,7 +231,7 @@ export function ParticlesBackground() {
     }
 
     function start() {
-      if (frame || reducedMotion.matches || document.hidden) return;
+      if (frame || !naTela || reducedMotion.matches || document.hidden) return;
       frame = requestAnimationFrame(tick);
     }
 
@@ -269,6 +279,13 @@ export function ParticlesBackground() {
     resize();
     start();
 
+    const observador = new IntersectionObserver(([entrada]) => {
+      naTela = entrada.isIntersecting;
+      if (naTela) start();
+      else stop();
+    });
+    observador.observe(canvas);
+
     window.addEventListener("resize", resize);
     window.addEventListener("pointermove", handlePointerMove, { passive: true });
     window.addEventListener("pointercancel", releasePointer);
@@ -279,6 +296,7 @@ export function ParticlesBackground() {
 
     return () => {
       stop();
+      observador.disconnect();
       window.removeEventListener("resize", resize);
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointercancel", releasePointer);
@@ -290,10 +308,16 @@ export function ParticlesBackground() {
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
-      aria-hidden
-      className="pointer-events-none absolute inset-0 h-full w-full [mask-image:linear-gradient(to_bottom,#000_65%,transparent_100%)]"
-    />
+    <>
+      <canvas
+        ref={canvasRef}
+        aria-hidden
+        className="pointer-events-none absolute inset-0 h-full w-full"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,transparent_65%,var(--bg)_100%)]"
+      />
+    </>
   );
 }
