@@ -39,8 +39,8 @@ export const Route = createFileRoute("/android")({
 // em "ID e senha", do app de antes.) Mudou o app, mude aqui também.
 //
 // O celular do topo é o protótipo clicável do app (public/prototipo-android),
-// cópia de acessofast-desktop/prototipo-mobile no commit fb2d1e4 (08/10/2026),
-// o mesmo que gerou as imagens da ficha. Única mudança na cópia: noindex.
+// cópia de acessofast-desktop/prototipo-mobile no commit a27fd46 (20/10/2026, com o Otto),
+// a mesma base que gerou as imagens da ficha. Única mudança na cópia: noindex.
 
 const LADOS = {
   atendido: {
