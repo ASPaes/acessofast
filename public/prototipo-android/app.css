@@ -177,6 +177,17 @@ svg.i.l { width: 24px; height: 24px; }
 .li .ico { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--surface-2); color: var(--text-2); flex: none; position: relative; }
 .li .ico.ok { color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); }
 .li .ico.warn { color: var(--warn); background: color-mix(in srgb, var(--warn) 12%, transparent); }
+/* Otto (otto.css, gerado do painel): o estado deste celular, a conexão e o status de cada computador. */
+.estado-cel { display: flex; align-items: center; gap: 10px; }
+.estado-cel b { font-size: 14px; }
+.estado-cel.ok b { color: var(--ok); }
+.estado-cel.live b { color: var(--cyan); }
+.estado-cel.warn b { color: var(--warn); }
+.estado-cel.off b { color: var(--muted); }
+.otto-cel { width: 54px; margin: -8px -2px -8px -6px; }
+.otto-conexao { width: 88px; }
+.li .ico .st-otto { position: absolute; right: -6px; bottom: -6px; width: 18px; height: 18px; }
+.pill .pill-otto { width: 15px; height: 15px; margin: -3px 0; }
 .li .ico .st { position: absolute; right: -2px; bottom: -2px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--surface); background: var(--muted); }
 .li .ico .st.on { background: var(--ok); }
 .li .chev { color: var(--muted); }

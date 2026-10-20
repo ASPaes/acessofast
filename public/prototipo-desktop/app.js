@@ -76,6 +76,9 @@ const S = {
   toast: null,
   recebido: null,
   cheia: false,
+  // Simulador: este computador sem conexão com o servidor, e o próximo acesso recusado pelo cliente.
+  semServidor: false,
+  recusaProximo: false,
   prefs: { placa: true, impressora: true, gravarAuto: false, idioma: "Português (Brasil)", perms: { mouse: true, clip: true, arq: true, som: false } },
   transf: [
     { nome: "relatorio-agosto.pdf", pc: "Financeiro · Contábil Souza", dir: "Recebido", tam: "2,4 MB", quando: "25/09 10:14" },
@@ -159,13 +162,13 @@ function cardDev(d) {
     <span class="acts"><button class="tagb" data-a="marcDev" data-v="${d.id}" title="Marcadores">${ic("tag", "s")}</button>
     <button class="star ${d.fav ? "on" : ""}" data-a="fav" data-v="${d.id}" title="${d.fav ? "Tirar dos favoritos" : "Adicionar aos favoritos"}">${ic("star", "s")}</button></span></div>
     ${chipsDev(d)}
-    <div class="meta"><span class="st ${d.online ? "on" : "off"}"><span class="dot"></span>${d.online ? "Online" : "Offline"}</span><span>${esc(d.quando)}</span></div>
+    <div class="meta"><span class="st ${d.online ? "on" : "off"}">${ottoMini(d.online ? "online" : "offline", "st-otto")}${d.online ? "Online" : "Offline"}</span><span>${esc(d.quando)}</span></div>
   </div>`;
 }
 function linhaDev(d) {
   return `<div class="lrow" role="button" tabindex="0" data-a="conectar" data-v="${d.id}" data-dev="${d.id}">
     <span class="os">${ic(d.os)}</span><span class="nm">${esc(d.nome)}</span><span class="lmk">${chipsDev(d, 2)}</span><span class="id">${fmtId(d.id)}</span>
-    <span class="st ${d.online ? "on" : "off"}"><span class="dot"></span>${d.online ? "Online" : "Offline"}</span><span class="q">${esc(d.quando)}</span>
+    <span class="st ${d.online ? "on" : "off"}">${ottoMini(d.online ? "online" : "offline", "st-otto")}${d.online ? "Online" : "Offline"}</span><span class="q">${esc(d.quando)}</span>
     <span class="acts"><button class="tagb" data-a="marcDev" data-v="${d.id}" title="Marcadores">${ic("tag", "s")}</button><button class="star ${d.fav ? "on" : ""}" data-a="fav" data-v="${d.id}" title="Favorito">${ic("star", "s")}</button></span></div>`;
 }
 function blocoDevs(lista, limite) {
@@ -213,12 +216,17 @@ function conteudoHome() {
   }
   const r = S.recebido;
   const sendoAcessado = r && r.fase === "ativo";
-  const status = sendoAcessado
-    ? `<span class="pill live pulse"><span class="dot"></span>Sendo acessado por ${esc(TECNICO.nome)}</span>`
-    : `<span class="pill ok"><span class="dot"></span>Pronto para receber acesso</span>`;
+  // O Otto diz como este computador está: pronto (acenando), sendo acessado (atendendo) ou sem
+  // conexão com o servidor (dormindo). Quem acessa este computador também vê.
+  const [cara, classe, texto] = S.semServidor
+    ? ["offline", "sem", "Sem conexão com o servidor"]
+    : sendoAcessado
+      ? ["atendendo", "live", `Sendo acessado por ${esc(TECNICO.nome)}`]
+      : ["ola", "ok", "Pronto para receber acesso"];
+  const status = `<div class="estado-pc ${classe}">${otto(cara, "otto-pc")}<div><span class="rot">Este computador</span><b>${texto}</b></div></div>`;
   return `<div class="arranjo"><div class="row2 col-esq">
       <section class="card">
-        <div class="kv"><h4>${ic("monitor", "s")}Este computador</h4>${status}</div>
+        ${status}
         <div><div class="lbl">Seu ID</div>
           <div class="kv"><span class="idbig">${idGrande(MEU_ID)}</span><button class="ibtn" data-a="copiar" data-v="id" title="Copiar ID">${ic("copy")}</button></div></div>
         <div class="divider"></div>
@@ -312,12 +320,21 @@ function telaConfig() {
 }
 
 /* ================= Sessão remota ================= */
+/* ================= Conectando e falha (acesso e arquivos) ================= */
+function telaConectando(t, texto) {
+  return `<div class="connecting"><div class="box">${otto("conectando", "otto-conexao")}<b>${esc(texto)}</b><span class="hint">${fmtId(t.dev.id)}</span>
+    <button class="btn sm" data-a="fecharAba" data-v="${t.k}">Cancelar</button></div></div>`;
+}
+// Não deu para conectar: o Otto fica triste e diz o motivo e o que fazer, na própria aba.
+function telaFalha(t) {
+  return `<div class="connecting"><div class="box falha">${otto("erro", "otto-conexao")}<b>${esc(t.falha.titulo)}</b><span class="motivo">${esc(t.falha.motivo)}</span>
+    <div class="btnrow"><button class="btn sm" data-a="fecharAba" data-v="${t.k}">Fechar</button><button class="btn sm p" data-a="tentarDeNovo" data-v="${t.k}">${ic("refresh", "s")}Tentar de novo</button></div></div></div>`;
+}
+
 function telaSessao(t) {
   const d = t.dev;
-  if (t.conectando) {
-    return `<div class="connecting"><div class="box"><div class="spin"></div><b>${esc(t.msgConexao || `Conectando a ${d.nome}`)}</b><span class="hint">${fmtId(d.id)}</span>
-      <button class="btn sm" data-a="fecharAba" data-v="${t.k}">Cancelar</button></div></div>`;
-  }
+  if (t.conectando) return telaConectando(t, t.msgConexao || `Conectando a ${d.nome}`);
+  if (t.falha) return telaFalha(t);
   const menu = (nome, html, lado = "left:0") => (S.menu === nome && t === aba() ?`<div class="menu" style="${lado};top:44px">${html}</div>` : "");
   const segM = (campo, ops) => `<div class="seg">${ops.map(([k, r]) => `<button class="${t[campo] === k ? "on" : ""}" data-a="sessSet" data-v="${campo}:${k}">${r}</button>`).join("")}</div>`;
   const tgl = (campo, rot) => `<div class="mi"><span>${rot}</span>${tg(t[campo], "sessTg", campo)}</div>`;
@@ -387,9 +404,8 @@ function telaSessao(t) {
 
 /* ================= Arquivos ================= */
 function telaArquivos(t) {
-  if (t.conectando) {
-    return `<div class="connecting"><div class="box"><div class="spin"></div><b>Abrindo os arquivos de ${esc(t.dev.nome)}</b><span class="hint">${fmtId(t.dev.id)}</span></div></div>`;
-  }
+  if (t.conectando) return telaConectando(t, `Abrindo os arquivos de ${t.dev.nome}`);
+  if (t.falha) return telaFalha(t);
   const lado = (L) => {
     const p = t[L];
     const itens = t.fs[L][p.path] || [];
@@ -531,7 +547,7 @@ function htmlAba(w, a) {
   const extras = `${a.rec ? `<span class="trec" title="Gravando"></span>` : ""}${a.mudo ? `<span class="tmudo" title="Som desligado">${ic("soundoff", "s")}</span>` : ""}`;
   const prev = `<div class="prev"><div class="pv-thumb m${Math.min(a.mon || 1, 2)}">${a.tipo === "arquivos" ? ic("folder") : "<i></i>"}</div>
     <b>${esc(a.dev.nome)}</b><span>${a.tipo === "arquivos" ? "Transferência de arquivos" : "Acesso remoto"} · ${fmtId(a.dev.id)}</span>
-    <span>${a.conectando ? "Conectando…" : `Conectado ${minutos(a)}`}${a.rec ? " · gravando" : ""}${a.mudo ? " · sem som" : ""}</span>${chipsDev(a.dev, 4)}</div>`;
+    <span>${a.conectando ? "Conectando…" : a.falha ? "Não conectou" : `Conectado ${minutos(a)}`}${a.rec ? " · gravando" : ""}${a.mudo ? " · sem som" : ""}</span>${chipsDev(a.dev, 4)}</div>`;
   return `<div class="wtab ${on ? "on" : ""} ${a.fixa ? "fixa" : ""} ${arrasto_aba && arrasto_aba.k === a.k && arrasto_aba.ativo ? "arrastando" : ""}" role="tab" aria-selected="${on}" data-a="aba" data-v="${a.k}" data-tab="${a.k}">
     ${icone}${a.fixa ? "" : `<span class="n">${esc(a.dev.nome)}</span>`}${extras}
     ${a.fixa ? "" : `<span class="x" data-a="fecharAba" data-v="${a.k}" title="Fechar">${ic("x", "s")}</span>`}${prev}</div>`;
@@ -594,6 +610,8 @@ function render() {
       <button data-a="simPedido">Alguém pede acesso</button>
       <button data-a="simSenha">Alguém entra com a senha</button>
       <button data-a="simMsg">Técnico manda mensagem</button>
+      <button data-a="simServidor">${S.semServidor ? "Voltar a conexão" : "Cair a conexão"}</button>
+      <button data-a="simRecusa" class="${S.recusaProximo ? "on" : ""}">Recusar o próximo acesso</button>
       <span class="sp"></span>
       <span class="dim">Esta barra não faz parte do app.</span>
       <button data-a="simTema">Tema: ${S.tema === "claro" ? "claro" : S.tema === "escuro" ? "escuro" : "do Windows"}</button>
@@ -662,7 +680,25 @@ function abrir(dev, tipo, onde = {}) {
   focar(w, t.k);
   if (!dev.rede) { dev.quando = "agora"; S.devs = [dev, ...S.devs.filter((d) => d !== dev)]; }
   render();
-  setTimeout(() => { t.conectando = false; if (t.rec) toast("Gravação iniciada sozinha, como está nas configurações."); render(); }, 1300);
+  conectarAba(t);
+}
+
+// O porquê de uma conexão não abrir, do jeito que o técnico precisa ler.
+function motivoDaFalha(dev) {
+  if (S.semServidor) return { titulo: "Sem conexão com o servidor", motivo: "Este computador está sem internet ou a rede bloqueia o AcessoFast. Confira a conexão e tente de novo." };
+  if (!dev.online) return { titulo: `${dev.nome} está offline`, motivo: "O computador está desligado ou sem internet agora. Peça para alguém ligar ou conectar à rede e tente de novo." };
+  if (S.recusaProximo) { S.recusaProximo = false; return { titulo: "O acesso foi recusado", motivo: "A pessoa no computador não aceitou o pedido. Combine com ela e tente de novo." }; }
+  return null;
+}
+
+function conectarAba(t) {
+  t.conectando = true; t.falha = null;
+  setTimeout(() => {
+    t.conectando = false;
+    t.falha = motivoDaFalha(t.dev);
+    if (!t.falha && t.rec) toast("Gravação iniciada sozinha, como está nas configurações.");
+    render();
+  }, 1300);
 }
 
 function pedirConexao(id, tipo, win) {
@@ -671,7 +707,6 @@ function pedirConexao(id, tipo, win) {
   if (dig.length < 8) return toast("O ID tem 9 números. Confira com a pessoa do outro lado.", true);
   if (dig === MEU_ID) return toast("Esse é o ID deste computador. Digite o ID do outro.", true);
   const d = devPorId(dig);
-  if (d && !d.online) return toast(`${d.nome} está desligado ou sem internet agora.`, true);
   if (d) return abrir(d, tipo, { win });
   S.modal = { tipo: "senha", id: dig, destino: tipo, win, lembrar: true };
   render();
@@ -867,6 +902,7 @@ const A = {
 
   // sessão
   fecharAba: (v) => { fecharAba(v); return false; },
+  tentarDeNovo: (v) => { const t = todas().find((a) => a.k === v); if (t) conectarAba(t); },
   sessSet: (v) => { const [c, val] = v.split(":"); const t = aba(); t[c] = c === "mon" ? Number(val) : val; if (c === "kbd") S.menu = null; },
   sessTg: (v) => { const t = aba(); t[v] = !t[v]; if (v === "bloqIn") toast(t.bloqIn ? "O mouse e o teclado do cliente estão bloqueados." : "O cliente pode mexer de novo."); },
   codec: () => { const t = aba(); const ops = ["Automática", "VP9", "H.264", "H.265", "AV1"]; t.codec = ops[(ops.indexOf(t.codec) + 1) % ops.length]; },
@@ -927,6 +963,8 @@ const A = {
     if (!r || r.fase !== "ativo") return toast("Primeiro simule um acesso a este computador.", true);
     msgChat(r.msgs, "Olá! Vou atualizar o sistema, pode deixar o computador ligado?", false); r.chat = true; r.min = false;
   },
+  simServidor: () => { S.semServidor = !S.semServidor; toast(S.semServidor ? "Simulando: este computador perdeu a conexão com o servidor." : "Conexão com o servidor de volta."); },
+  simRecusa: () => { S.recusaProximo = !S.recusaProximo; if (S.recusaProximo) toast("O próximo acesso que você abrir vai ser recusado do outro lado."); },
   simTema: () => { const ops = ["escuro", "claro", "sistema"]; A.tema(ops[(ops.indexOf(S.tema) + 1) % ops.length]); },
   simReset: () => { try { localStorage.removeItem("afp.tema"); localStorage.removeItem("afp.layout"); } catch { /* ok */ } location.reload(); return false; },
 };

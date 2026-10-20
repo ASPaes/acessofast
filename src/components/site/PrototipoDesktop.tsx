@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 // telas que existia aqui: conectar, sessão, arquivos, abas, menus, marcadores,
 // configurações e a barra "Simulador" (pedido de acesso, mensagem do técnico,
 // tema). Mora em public/prototipo-desktop, cópia de
-// acessofast-desktop/prototipo (157351d, o protótipo aprovado) com duas
+// acessofast-desktop/prototipo (a27fd46, o protótipo aprovado, já com o Otto) com duas
 // mudanças: noindex no index.html e, no app.js, a janela nunca maximiza (o
 // botão fica só no desenho, sem data-a; o duplo clique na barra de abas e a
 // sessão aberta não maximizam mais), porque dentro da página ela não tem

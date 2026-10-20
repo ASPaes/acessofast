@@ -64,6 +64,9 @@ const S = {
   filtro: new Set(),
   lista: "empresa",
   ov: null, // folha ou diálogo aberto
+  // Simular: celular sem conexão com o servidor, e o próximo acesso recusado do outro lado.
+  semServidor: false,
+  recusaProximo: false,
   recebida: null, // alguém acessando este celular
   remota: null, // este celular acessando um computador
   land: false,
@@ -161,13 +164,17 @@ function faixaRecebida() {
 // ---- Este celular ----
 function telaCelular() {
   const f = faltam();
-  const st = S.recebida
-    ? `<span class="pill live pulse"><i class="dot"></i>Sendo acessado</span>`
-    : !S.servico
-      ? `<span class="pill off"><i class="dot"></i>Desligado</span>`
-      : f
-        ? `<span class="pill warn"><i class="dot"></i>Falta permissão</span>`
-        : `<span class="pill ok"><i class="dot"></i>Pronto para receber acesso</span>`;
+  // O Otto diz como este celular está, com a cara de cada situação.
+  const [cara, cls, texto] = S.semServidor
+    ? ["offline", "off", "Sem conexão com o servidor"]
+    : S.recebida
+      ? ["atendendo", "live", "Sendo acessado"]
+      : !S.servico
+        ? ["offline", "off", "Desligado"]
+        : f
+          ? ["aguardando", "warn", "Falta permissão"]
+          : ["ola", "ok", "Pronto para receber acesso"];
+  const st = `<div class="estado-cel ${cls}">${otto(cara, "otto-cel")}<b>${texto}</b></div>`;
   const perm = (k, icone, titulo, okTxt, faltaTxt, opcional = false) => {
     const ok = S.perms[k];
     return `<div class="li">
@@ -181,7 +188,7 @@ function telaCelular() {
 
     <div class="card hero">
       <div class="kv"><span class="lbl">Receber acesso</span><button class="switch ${S.servico ? "on" : ""}" data-a="servico" aria-label="Receber acesso"></button></div>
-      <div>${st}</div>
+      ${st}
       <div>
         <div class="lbl" style="margin-bottom:6px">ID deste celular</div>
         <div class="kv"><span class="idbig">${grupos(MEU_ID)}</span>
@@ -308,7 +315,7 @@ function telaAcessar() {
 
 function linhaPc(c) {
   return `<button class="li" data-a="pc" data-v="${c.id}">
-    <span class="ico">${ic(c.os)}<i class="st ${c.on ? "on" : ""}"></i></span>
+    <span class="ico">${ic(c.os)}${ottoMini(c.on ? "online" : "offline", "st-otto")}</span>
     <span class="t"><b>${esc(c.nome)}</b><span><span class="mono">${c.id}</span>${c.on ? "" : ` · desligado ${c.visto}`}</span></span>
     <span class="mk">${c.mk.map((m) => `<i style="background:${mk(m).cor}"></i>`).join("")}</span>
     ${S.favs.has(c.id) ? `<span style="color:var(--warn)">${ic("star", "s")}</span>` : ""}
@@ -512,7 +519,7 @@ function overlay() {
       <i class="grab"></i>
       <div class="kv" style="align-items:flex-start">
         <div class="li" style="padding:0">
-          <span class="ico">${ic(c.os)}<i class="st ${c.on ? "on" : ""}"></i></span>
+          <span class="ico">${ic(c.os)}${ottoMini(c.on ? "online" : "offline", "st-otto")}</span>
           <span class="t"><b style="font-size:17px">${esc(c.nome)}</b><span class="mono">${c.id}</span></span>
         </div>
         <button class="ibtn" data-a="fav" data-v="${c.id}" style="${S.favs.has(c.id) ? "color:var(--warn)" : ""}">${ic("star")}</button>
@@ -522,7 +529,7 @@ function overlay() {
         <span class="t"><b class="${c.cliente ? "" : "sem"}">${c.cliente ? esc(c.cliente) : "Sem cliente vinculado"}</b>${DOCUMENTOS[c.cliente] ? `<span class="mono">${formatarDocumento(DOCUMENTOS[c.cliente])}</span>` : ""}</span>
       </div>
       <div class="card" style="padding:12px 14px;gap:8px">
-        <div class="kv"><span class="small muted">Situação</span>${c.on ? `<span class="pill ok"><i class="dot"></i>Ligado</span>` : `<span class="pill off"><i class="dot"></i>Desligado ${c.visto}</span>`}</div>
+        <div class="kv"><span class="small muted">Situação</span>${c.on ? `<span class="pill ok">${ottoMini("online", "pill-otto")}Ligado</span>` : `<span class="pill off">${ottoMini("offline", "pill-otto")}Desligado ${c.visto}</span>`}</div>
         <div class="kv" style="align-items:flex-start"><span class="small muted">Marcadores</span>
           <span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">${c.mk.map((m) => `<span class="chip" style="height:26px"><i style="background:${mk(m).cor}"></i>${mk(m).nome}</span>`).join("") || '<span class="small muted">nenhum</span>'}</span></div>
       </div>
@@ -544,9 +551,16 @@ function overlay() {
   }
   if (o.t === "conectando") {
     return `<div class="ov center"><div class="dlg" style="align-items:center;text-align:center">
-      <span class="pill live pulse"><i class="dot"></i>Conectando</span>
+      ${otto("conectando", "otto-conexao")}
       <h2>${esc(o.nome)}</h2><div class="small muted">Buscando o computador pela internet…</div>
       <button class="btn" style="width:100%;flex:none" data-a="fechar">Cancelar</button></div></div>`;
+  }
+  // Não deu para conectar: o Otto fica triste e diz o motivo e o que fazer.
+  if (o.t === "falha") {
+    return `<div class="ov center"><div class="dlg" style="align-items:center;text-align:center">
+      ${otto("erro", "otto-conexao")}
+      <h2>${esc(o.titulo)}</h2><div class="small muted">${esc(o.motivo)}</div>
+      <div class="btnrow" style="width:100%"><button class="btn" style="flex:1" data-a="fechar">Fechar</button><button class="btn primary" style="flex:1" data-a="tentar">${ic("refresh", "s")}Tentar de novo</button></div></div></div>`;
   }
   if (o.t === "mais") {
     const it = (icone, nome, v) => `<button class="li" data-a="toast" data-v="${v}"><span class="ico">${ic(icone)}</span><span class="t"><b>${nome}</b></span></button>`;
@@ -665,6 +679,8 @@ function painelCenarios() {
     <span class="lbl">Simular</span>
     <button class="cen" data-a="sim-pedido">Técnico pedindo acesso<small>Chega no celular do cliente</small></button>
     <button class="cen" data-a="sim-recebida">Atendimento em andamento<small>Faixa fixa e aviso do Android</small></button>
+    <button class="cen ${S.semServidor ? "on" : ""}" data-a="sim-servidor">${S.semServidor ? "Voltar a conexão" : "Cair a conexão"}<small>Celular sem internet: o Otto dorme e o acesso não abre</small></button>
+    <button class="cen ${S.recusaProximo ? "on" : ""}" data-a="sim-recusa">Recusar o próximo acesso<small>Lado do técnico: o Otto mostra o motivo</small></button>
     <button class="cen" data-a="sim-atualizado" data-v="1">Primeira vez no app novo<small>Depois da atualização pela loja</small></button>
     <button class="cen" data-a="sim-atualizado">App atualizado<small>Uma vez por versão</small></button>
     <span class="lbl">Tema</span>
@@ -684,11 +700,22 @@ function render() {
 }
 
 // ---------- ações ----------
+// O porquê de uma conexão não abrir, do jeito que o técnico precisa ler.
+function motivoDaFalha() {
+  if (S.semServidor) return { titulo: "Sem conexão com o servidor", motivo: "O celular está sem internet ou a rede bloqueia o AcessoFast. Confira o Wi-Fi ou os dados móveis e tente de novo." };
+  if (S.recusaProximo) { S.recusaProximo = false; return { titulo: "O acesso foi recusado", motivo: "A pessoa no computador não aceitou o pedido. Combine com ela e tente de novo." }; }
+  return null;
+}
+let ultimaTentativa = null;
+
 function conectar(pc) {
+  ultimaTentativa = pc;
   S.ov = { t: "conectando", nome: pc.nome };
   render();
   setTimeout(() => {
     if (S.ov?.t !== "conectando") return;
+    const falha = motivoDaFalha();
+    if (falha) { S.ov = { t: "falha", ...falha }; render(); return; }
     const credito = S.conta.modo !== "plano";
     if (credito) S.conta.creditos--;
     S.ov = null;
@@ -744,6 +771,9 @@ const ACOES = {
   pc: (v) => { S.ov = { t: "pc", id: v }; render(); },
   fav: (v) => { S.favs.has(v) ? S.favs.delete(v) : S.favs.add(v); render(); },
   conectar: (v) => conectar(COMPUTADORES.find((c) => c.id === v)),
+  tentar: () => { if (ultimaTentativa) conectar(ultimaTentativa); },
+  "sim-servidor": () => { S.semServidor = !S.semServidor; S.cenAberto = false; toast(S.semServidor ? "Simulando: o celular perdeu a conexão com o servidor." : "Conexão com o servidor de volta."); render(); },
+  "sim-recusa": () => { S.recusaProximo = !S.recusaProximo; S.cenAberto = false; if (S.recusaProximo) toast("O próximo acesso que você abrir vai ser recusado do outro lado."); render(); },
   "conectar-id": (v) => conectar({ id: v.replace(/(\d{3})(\d{3})(\d{3})/, "$1 $2 $3"), nome: "Computador avulso", os: "win" }),
   "sair-remota": () => { S.remota = null; S.land = false; render(); },
   girar: () => { S.land = !S.land; render(); },
